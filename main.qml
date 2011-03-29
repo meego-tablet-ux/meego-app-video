@@ -794,7 +794,6 @@ Window {
                     showprogressbar: true
                     showvolume: true
                     showfavorite: true
-                    showcropped: true
                     onPrevPressed: {
                         videoThumbnailView.show(false);
                         if (videoThumbnailView.currentIndex == 0)
