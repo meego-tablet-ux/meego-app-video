@@ -856,10 +856,6 @@ Window {
                         currentVideoFavorite = isfavorite;
                         masterVideoModel.setFavorite(currentVideoID, currentVideoFavorite);
                     }
-                    onCropPressed: {
-                        videoCropped = iscropped;
-                    }
-
                     states: [
                         State {
                             name: "showVideoToolbar"
@@ -914,7 +910,6 @@ Window {
         anchors.left: parent.left
         landscape: scene.isLandscapeView()
         showadd: false
-        z: 200
         onCancelPressed: {
             sharing.clearItems();
             masterVideoModel.clearSelected();
@@ -924,6 +919,35 @@ Window {
             if(masterVideoModel.selectionCount() > 0)
                 scene.showModalDialog(deleteMultipleItemsComponent);
         }
+        states: [
+            State {
+                name: "showActionBar"
+                when: multiSelectMode
+                PropertyChanges {
+                    target: multibar
+                    opacity:1
+                }
+            },
+            State {
+                name: "hideActionBar"
+                when: !multiSelectMode
+                PropertyChanges {
+                    target: multibar
+                    opacity: 0
+                }
+            }
+        ]
+
+        transitions: [
+            Transition {
+                reversible: true
+                PropertyAnimation {
+                    target: multibar
+                    property: "opacity"
+                    duration: 250
+                }
+            }
+        ]
     }
 }
 
