@@ -49,6 +49,16 @@ Window {
     property bool videoCropped: false
     property bool videoVisible: false
 
+    Timer {
+        id: startupTimer
+        interval: 1000
+        repeat: false
+    }
+
+    Component.onCompleted: {
+        startupTimer.start();
+    }
+
     function enterFullscreen()
     {
         showtoolbar = false;
@@ -395,7 +405,7 @@ Window {
                     anchors.centerIn: parent
                     height: parent.height/2
                     width: (scene.isLandscapeView())?(parent.width/2):(parent.width/1.2)
-                    visible: (masterVideoModel.total == 0)
+                    visible: ((masterVideoModel.total == 0)&&(!startupTimer.running))
                     Text {
                         id: noVideosScreenText1
                         width: parent.width
