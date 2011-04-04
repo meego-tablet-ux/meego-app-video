@@ -479,6 +479,8 @@ Window {
             anchors.fill: parent
             title: labelVideoTitle
             fullContent: true
+            showSearch: false
+            disableSearch: true
 
             function playvideo(payload)
             {
