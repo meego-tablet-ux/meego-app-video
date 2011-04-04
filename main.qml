@@ -317,12 +317,15 @@ Window {
                     }
                 }
             }
+            property int highlightindex: 0
             menuContent: Column {
                 width: childrenRect.width
-
                 ActionMenu {
                     model: [topicAll, qsTr("Recently added"), qsTr("Recently viewed"), qsTr("Unwatched"), qsTr("Favorites")]
+                    title: qsTr("Filter By")
+                    highlightIndex: highlightindex
                     onTriggered: {
+                        highlightindex = index;
                         if (index == 0) {
                             landingScreenGridView.opacity = 0;
                             if(masterVideoModel.filter != VideoListModel.FilterAll)
