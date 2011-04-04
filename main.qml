@@ -375,6 +375,7 @@ Window {
                     }
                 }
             }
+
             Item {
                 id: landingItem
                 parent: landingPage.content
@@ -387,6 +388,31 @@ Window {
                     fullscreen = false;
                     showtoolbar = true;
                     showVideoToolbar = false;
+                }
+
+                Item {
+                    id: noVideosScreen
+                    anchors.centerIn: parent
+                    height: parent.height/2
+                    width: (scene.isLandscapeView())?(parent.width/2):(parent.width/1.2)
+                    visible: (masterVideoModel.total == 0)
+                    Text {
+                        id: noVideosScreenText1
+                        width: parent.width
+                        text: qsTr("No videos added yet, do you want to start watching videos?")
+                        font.pixelSize: scene.height/17
+                        anchors.top: parent.top
+                        wrapMode: Text.WordWrap
+                    }
+                    Text {
+                        id: noVideosScreenText2
+                        width: parent.width
+                        text: qsTr("Start recording your own or upload your favourite shows.")
+                        font.pixelSize: scene.height/21
+                        anchors.top: noVideosScreenText1.bottom
+                        anchors.topMargin: scene.height/24
+                        wrapMode: Text.WordWrap
+                    }
                 }
 
                 MediaGridView {
