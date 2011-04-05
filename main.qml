@@ -661,6 +661,8 @@ Window {
                     id: videoThumbnailView
                     model: masterVideoModel
                     width: parent.width
+                    showText: false
+                    itemSpacing: 0
                     anchors.top: parent.top
                     anchors.topMargin: 5 + scene.statusBar.height + detailPage.toolbarHeight
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -835,6 +837,7 @@ Window {
                     showprogressbar: true
                     showvolume: true
                     showfavorite: true
+                    isfavorite: currentVideoFavorite
                     onPrevPressed: {
                         videoThumbnailView.show(false);
                         if (videoThumbnailView.currentIndex == 0)
