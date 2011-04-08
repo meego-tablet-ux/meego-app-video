@@ -7,8 +7,8 @@
  */
 
 import Qt 4.7
-import QtMultimediaKit 1.1
 import MeeGo.Labs.Components 0.1
+import QtMultimediaKit 1.1
 import MeeGo.Media 0.1
 import MeeGo.Sharing 0.1
 
@@ -438,6 +438,7 @@ Window {
                     cellHeight: cellWidth
                     model: masterVideoModel
                     defaultThumbnail: "image://theme/media/video_thumb_med"
+                    showHeader: true
                     onClicked:{
                         if(multiSelectMode)
                         {
