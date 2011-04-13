@@ -115,9 +115,8 @@ Window {
             anchors.fill: parent
             pageTitle: qsTr("Videos")
             property bool infocus: true
-            onActivated : { infocus = true; }
-            onDeactivated : { infocus = false; }
-            Component.onCompleted: {
+            onActivated : {
+                infocus = true;
                 if(currentVideoID != "")
                     editorModel.setPlayStatus(currentVideoID, VideoListModel.Stopped);
                 window.disableToolBarSearch = false;
@@ -125,6 +124,7 @@ Window {
                 fullContent = false;
                 showVideoToolbar = false;
             }
+            onDeactivated : { infocus = false; }
 
             ModalDialog {
                 id: deleteItemDialog
@@ -735,9 +735,8 @@ Window {
 
                     return newOrientation
                 }
-                
+
                 Component.onCompleted: {
-                    console.log("YRAAAAAAAAAAAAAAAAAAAG: COMPLETE");
                     window.disableToolBarSearch = true;
                     window.orientation = lockedOrientation();
                     window.orientationLocked = true;
@@ -751,7 +750,6 @@ Window {
                 }
 
                 Component.onDestruction: {
-                    console.log("YRAAAAAAAAAAAAAAAAAAAG: DESSTRUCT");
                     window.orientationLocked = false;
                 }
 
