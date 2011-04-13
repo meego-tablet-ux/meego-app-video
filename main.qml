@@ -94,6 +94,11 @@ Window {
         }
     }
 
+    Labs.ShareObj {
+        id: shareObj
+        shareType: MeeGoUXSharingClientQmlObj.ShareTypeVideo
+    }
+
     Connections {
         target: mainWindow
         onCall: {
@@ -256,11 +261,6 @@ Window {
                         }
                     }
                 }
-            }
-
-            Labs.ShareObj {
-                id: shareObj
-                shareType: MeeGoUXSharingClientQmlObj.ShareTypeVideo
             }
 
             ModalContextMenu {
@@ -504,6 +504,7 @@ Window {
                     anchors.left: parent.left
                     landscape: window.inLandscape
                     showadd: false
+                    sharing: shareObj
                     onDeletePressed: {
                         if(masterVideoModel.selectionCount() > 0)
                         {
@@ -512,7 +513,6 @@ Window {
                         }
                     }
                     onCancelPressed: {
-                        sharing.clearItems();
                         masterVideoModel.clearSelected();
                         multiSelectMode = false;
                     }
@@ -667,11 +667,6 @@ Window {
                 }
             }
 
-            Labs.ShareObj {
-                id: shareObj
-                shareType: MeeGoUXSharingClientQmlObj.ShareTypeVideo
-            }
-
             ModalContextMenu {
                 id: contextMenu
                 property alias model: contextActionMenu.model
@@ -700,23 +695,6 @@ Window {
                             }
                             contextMenu.hide();
                         }
-                    }
-                }
-                onSubMenuTriggered: {
-                    if (shareModel[index] == labelCancel)
-                    {
-                        contextMenu.subMenuVisible = false;
-                    }
-                    else
-                    {
-                        var svcTypes = shareObj.serviceTypes;
-                        for (x in svcTypes) {
-                            if (shareModel[index] == svcTypes[x]) {
-                                shareObj.showContext(shareModel[index], contextMenu.x, contextMenu.y);
-                                break;
-                            }
-                        }
-                        contextMenu.hide();
                     }
                 }
             }
@@ -833,8 +811,8 @@ Window {
 
                         Connections {
                             target: window
-                            onForegroundChanged: {
-                                if (!window.foreground && video.playing && !video.paused)
+                            onWindowActiveChanged: {
+                                if (!window.isActive && video.playing && !video.paused)
                                 {
                                     if (fullContent)
                                         exitFullscreen();
