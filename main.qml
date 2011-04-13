@@ -7,7 +7,8 @@
  */
 
 import Qt 4.7
-import MeeGo.Labs.Components 0.1
+import MeeGo.Components 0.1
+import MeeGo.Labs.Components 0.1 as Labs
 import QtMultimediaKit 1.1
 import MeeGo.Media 0.1
 import MeeGo.Sharing 0.1
@@ -15,14 +16,14 @@ import MeeGo.Sharing 0.1
 import "functions.js" as Code
 
 Window {
-    id: scene
-    title: qsTr("Video")
-    showsearch: false
-    filterModel: []
-    applicationPage: landingScreenContent
-    filterMenuWidth: 300
+    id: window
 
     property string topicAll: qsTr("All")
+    property string topicAdded: qsTr("Recently added")
+    property string topicViewed: qsTr("Recently viewed")
+    property string topicUnwatched: qsTr("Unwatched")
+    property string topicFavorites: qsTr("Favorites")
+
     property string labelVideoTitle: ""
     property string labelConfirmDelete: qsTr("Yes, Delete")
     property string labelCancel: qsTr("Cancel")
@@ -48,6 +49,7 @@ Window {
     property bool showVideoToolbar: false
     property bool videoCropped: false
     property bool videoVisible: false
+    property variant applicationData: []
 
     Timer {
         id: startupTimer
@@ -56,21 +58,20 @@ Window {
     }
 
     Component.onCompleted: {
+        switchBook( landingScreenContent )
         startupTimer.start();
     }
 
     function enterFullscreen()
     {
-        showtoolbar = false;
         showVideoToolbar = false;
-        fullscreen = true;
+        fullContent = true;
     }
 
     function exitFullscreen()
     {
-        fullscreen = false;
+        fullContent = false;
         showVideoToolbar = true;
-        showtoolbar = true;
     }
 
     // an editor model, used to do things like tag arbitrary items as favorite/viewed
@@ -106,48 +107,27 @@ Window {
         }
     }
 
-    Loader {
-        id: volumeBarLoader
-    }
-
     Component {
-        id: volumeControlComponent
-        VolumeController {
-            onClose: {
-                volumeBarLoader.sourceComponent = undefined;
-            }
-        }
-    }
+        id: landingScreenContent
+        AppPage {
+            id: landingPage
+            anchors.fill: parent
+            pageTitle: qsTr("Videos")
 
-    Loader {
-        anchors.fill: parent
-        id: dialogLoader
-    }
-
-    Component {
-        id: deleteItemComponent
-        ModalDialog {
-            dialogTitle: labelDelete
-            leftButtonText: labelConfirmDelete
-            rightButtonText:labelCancel
-            property variant payload
-            onPayloadChanged:{
-                contentLoader.item.title = payload.mtitle;
-            }
-
-            onDialogClicked: {
-                if( button == 1) {
-                    console.log(payload.muri);
+            ModalDialog {
+                id: deleteItemDialog
+                title: labelDelete
+                acceptButtonText: labelConfirmDelete
+                cancelButtonText: labelCancel
+                property variant payload
+                onPayloadChanged:{
+                    contentItem.title = payload.mtitle;
+                }
+                onAccepted: {
                     masterVideoModel.destroyItemByID(payload.mitemid);
                 }
-                dialogLoader.sourceComponent = undefined;
-            }
-            Component.onCompleted: {
-                contentLoader.sourceComponent = dialogContent;
-            }
-            Component {
-                id: dialogContent
-                Item {
+                content: Item {
+                    id: contentItem
                     anchors.fill: parent
                     property alias title : titleText.text
                     clip: true
@@ -159,7 +139,6 @@ Window {
                         horizontalAlignment: Text.AlignHCenter
                     }
                     Text {
-                        id:warning
                         text: qsTr("If you delete this, it will be removed from your device")
                         anchors.top:titleText.bottom
                         width:  parent.width
@@ -168,35 +147,23 @@ Window {
                     }
                 }
             }
-        }
-    }
 
-    Component {
-        id: deleteMultipleItemsComponent
-        ModalDialog {
-            property int deletecount: masterVideoModel.selectionCount()
-            dialogTitle: (deletecount < 2)?qsTr("Permanently delete this video?"):qsTr("Permanently delete these %1 videos?").arg(deletecount)
-            leftButtonText: labelConfirmDelete
-            rightButtonText:labelCancel
-            onDialogClicked: {
-                if( button == 1) {
+            ModalDialog {
+                id: deleteMultipleItemsDialog
+                property int deletecount: masterVideoModel.selectionCount()
+                title: (deletecount < 2)?qsTr("Permanently delete this video?"):qsTr("Permanently delete these %1 videos?").arg(deletecount)
+                acceptButtonText: labelConfirmDelete
+                cancelButtonText:labelCancel
+                onAccepted: {
                     masterVideoModel.destroyItemsByID(masterVideoModel.getSelectedIDs());
                     masterVideoModel.clearSelected();
                     multibar.sharing.clearItems();
                     multiSelectMode = false;
                 }
-                dialogLoader.sourceComponent = undefined;
-            }
-            Component.onCompleted: {
-                contentLoader.sourceComponent = dialogContent;
-            }
-            Component {
-                id: dialogContent
-                Item {
+                content: Item {
                     anchors.fill: parent
                     clip: true
                     Text {
-                        id:warning
                         text: qsTr("If you delete these, they will be removed from your device")
                         anchors.verticalCenter:parent.verticalCenter
                         width:  parent.width
@@ -205,15 +172,20 @@ Window {
                     }
                 }
             }
-        }
-    }
 
-    Component {
-        id: landingScreenContent
-        ApplicationPage {
-            id: landingPage
-            anchors.fill: parent
-            title: qsTr("Videos")
+            Connections {
+                target: multibar
+                onDeletePressed: {
+                    if(masterVideoModel.selectionCount() > 0)
+                    {
+                        deleteMultipleItemsDialog.show();
+                    }
+                }
+            }
+
+            Component.onCompleted: {
+                window.disableToolBarSearch = false;
+            }
 
             function playvideo(payload)
             {
@@ -221,182 +193,216 @@ Window {
                 currentVideoID = payload.mitemid;
                 currentVideoFavorite = payload.mfavorite;
                 videoSource = payload.muri;
-                fullscreen = true;
+                fullContent = true;
                 labelVideoTitle = payload.mtitle;
                 editorModel.setViewed(payload.mitemid);
                 editorModel.setPlayStatus(payload.mitemid, VideoListModel.Playing);
-                landingPage.addApplicationPage(detailViewContent);
+                window.addPage(detailViewContent);
             }
 
-            onSearch: {
-                videoSearch = needle;
-                landingItem.landingScreenGridView.opacity = 0;
-                masterVideoModel.search = videoSearch;
-                if(masterVideoModel.filter != VideoListModel.FilterSearch)
-                    masterVideoModel.filter = VideoListModel.FilterSearch
-                videoListState = (videoListState + 1)%2;
+            Connections {
+                target: window
+                onSearch: {
+                    videoSearch = needle;
+                    landingScreenGridView.opacity = 0;
+                    masterVideoModel.search = videoSearch;
+                    if(masterVideoModel.filter != VideoListModel.FilterSearch)
+                        masterVideoModel.filter = VideoListModel.FilterSearch
+                    videoListState = (videoListState + 1)%2;
+                }
             }
 
-            onApplicationDataChanged: {
-                if(applicationData != undefined)
-                {
-                    console.log("Remote Call: " + applicationData);
-                    var cmd = applicationData[0];
-                    var cdata = applicationData[1];
-
-                    scene.applicationData = undefined;
-                    console.log("in landing screen");
-
-                    if (cmd == "video")
+            Connections {
+                target: window
+                onApplicationDataChanged: {
+                    if(applicationData != undefined)
                     {
-                        var itemid;
-                        if(masterVideoModel.isURN(cdata))
-                            itemid = masterVideoModel.getIDfromURN(cdata);
-                        else
-                            itemid = cdata;
+                        console.log("Remote Call: " + applicationData);
+                        var cmd = applicationData[0];
+                        var cdata = applicationData[1];
 
-                        if(itemid != "")
+                        window.applicationData = undefined;
+                        console.log("in landing screen");
+
+                        if (cmd == "video")
                         {
-                            /* need to filter on all */
-                            masterVideoModel.filter = VideoListModel.FilterAll
-
-                            videoIndex = masterVideoModel.itemIndex(itemid);
-                            var title;
-                            var uri;
+                            var itemid;
                             if(masterVideoModel.isURN(cdata))
-                            {
-                                title = masterVideoModel.getTitlefromURN(cdata);
-                                uri = masterVideoModel.getURIfromURN(cdata);
-                            }
+                                itemid = masterVideoModel.getIDfromURN(cdata);
                             else
-                            {
-                                title = masterVideoModel.getTitlefromID(cdata);
-                                uri = masterVideoModel.getURIfromID(cdata);
-                            }
+                                itemid = cdata;
 
-                            currentVideoID = itemid;
-                            currentVideoFavorite = masterVideoModel.isFavorite(itemid);
-                            console.log("URI: " + uri);
-                            videoSource = uri;
-                            fullscreen = false;
-                            labelVideoTitle = title;
-                            landingPage.addApplicationPage(detailViewContent);
-                            editorModel.setViewed(itemid);
-                            editorModel.setPlayStatus(itemid, VideoListModel.Playing);
+                            if(itemid != "")
+                            {
+                                /* need to filter on all */
+                                masterVideoModel.filter = VideoListModel.FilterAll
+
+                                videoIndex = masterVideoModel.itemIndex(itemid);
+                                var title;
+                                var uri;
+                                if(masterVideoModel.isURN(cdata))
+                                {
+                                    title = masterVideoModel.getTitlefromURN(cdata);
+                                    uri = masterVideoModel.getURIfromURN(cdata);
+                                }
+                                else
+                                {
+                                    title = masterVideoModel.getTitlefromID(cdata);
+                                    uri = masterVideoModel.getURIfromID(cdata);
+                                }
+
+                                currentVideoID = itemid;
+                                currentVideoFavorite = masterVideoModel.isFavorite(itemid);
+                                console.log("URI: " + uri);
+                                videoSource = uri;
+                                fullContent = false;
+                                labelVideoTitle = title;
+                                window.addPage(detailViewContent);
+                                editorModel.setViewed(itemid);
+                                editorModel.setPlayStatus(itemid, VideoListModel.Playing);
+                            }
                         }
                     }
                 }
             }
 
-            ShareObj {
+            Labs.ShareObj {
                 id: shareObj
                 shareType: MeeGoUXSharingClientQmlObj.ShareTypeVideo
             }
 
-            ContextMenu {
+            ModalContextMenu {
                 id: contextMenu
-                onTriggered: {
-                    shareObj.clearItems();
-                    if (model[index] == labelPlay)
-                    {
-                        // Play
-                        landingPage.playvideo(payload);
-                    }
-                    else if ((model[index] == labelFavorite)||(model[index] == labelUnFavorite))
-                    {
-                        // Favorite/unfavorite
-                        Code.changeItemFavorite(payload);
-                    }
-                    else if (model[index] == labelDelete)
-                    {
-                        // Delete
-                        scene.showModalDialog(deleteItemComponent);
-                        dialogLoader.item.payload = payload;
-                    }
-                    else if (model[index] == labelMultiSelect)
-                    {
-                        // multi select mode on
-                        multiSelectMode = true;
-                    }
-                    else if (model[index] == labelcShare)
-                    {
-                        // Share
+                property alias payload: contextActionMenu.payload
+                property alias model: contextActionMenu.model
+                property variant shareModel: []
+                content: ActionMenu {
+                    id: contextActionMenu
+                    property variant payload: undefined
+                    onTriggered: {
                         shareObj.clearItems();
-                        shareObj.addItem(payload.muri) // URI
-                        shareObj.showContextTypes(mouseX, mouseY)
+                        if (model[index] == labelPlay)
+                        {
+                            // Play
+                            landingPage.playvideo(payload);
+                            contextMenu.hide();
+                        }
+                        else if ((model[index] == labelFavorite)||(model[index] == labelUnFavorite))
+                        {
+                            // Favorite/unfavorite
+                            Code.changeItemFavorite(payload);
+                            contextMenu.hide();
+                        }
+                        else if (model[index] == labelDelete)
+                        {
+                            // Delete
+                            deleteItemDialog.payload = payload;
+                            deleteItemDialog.show();
+                            contextMenu.hide();
+                        }
+                        else if (model[index] == labelMultiSelect)
+                        {
+                            // multi select mode on
+                            multiSelectMode = true;
+                            contextMenu.hide();
+                        }
+                        else if (model[index] == labelcShare)
+                        {
+                            // Share
+                            shareObj.clearItems();
+                            shareObj.addItem(payload.muri) // URI
+                            contextMenu.shareModel = shareObj.serviceTypes;
+                            contextMenu.shareModel = contextMenu.shareModel.concat(labelCancel);
+                            contextMenu.subMenuModel = contextMenu.shareModel;
+                            contextMenu.subMenuPayload = contextMenu.shareModel;
+                            contextMenu.subMenuVisible = true;
+                        }
+                    }
+                }
+                onSubMenuTriggered: {
+                    if (shareModel[index] == labelCancel)
+                    {
+                        contextMenu.subMenuVisible = false;
+                    }
+                    else
+                    {
+                        var svcTypes = shareObj.serviceTypes;
+                        for (x in svcTypes) {
+                            if (shareModel[index] == svcTypes[x]) {
+                                shareObj.showContext(shareModel[index], contextMenu.x, contextMenu.y);
+                                break;
+                            }
+                        }
+                        contextMenu.hide();
                     }
                 }
             }
-            property int highlightindex: 0
-            menuContent: Column {
-                width: childrenRect.width
-                ActionMenu {
-                    model: [topicAll, qsTr("Recently added"), qsTr("Recently viewed"), qsTr("Unwatched"), qsTr("Favorites")]
-                    title: qsTr("Filter By")
-                    highlightIndex: highlightindex
-                    onTriggered: {
-                        highlightindex = index;
-                        if (index == 0) {
-                            landingScreenGridView.opacity = 0;
-                            if(masterVideoModel.filter != VideoListModel.FilterAll)
-                            {
-                                masterVideoModel.filter = VideoListModel.FilterAll
-                                masterVideoModel.sort = VideoListModel.SortByTitle;
-                            }
-                        }else if( index == 1) {
-                            landingScreenGridView.opacity = 0;
-                            if(masterVideoModel.filter != VideoListModel.FilterAdded)
-                            {
-                                masterVideoModel.filter = VideoListModel.FilterAdded
-                                masterVideoModel.sort = VideoListModel.SortByAddedTime;
-                            }
-                        }else if(index == 2) {
-                            landingScreenGridView.opacity = 0;
-                            if(masterVideoModel.filter != VideoListModel.FilterViewed)
-                            {
-                                masterVideoModel.filter = VideoListModel.FilterViewed
-                                masterVideoModel.sort = VideoListModel.SortByAccessTime;
-                            }
-                        }else if(index == 3) {
-                            landingScreenGridView.opacity = 0;
-                            if(masterVideoModel.filter != VideoListModel.FilterUnwatched)
-                            {
-                                masterVideoModel.filter = VideoListModel.FilterUnwatched
-                                masterVideoModel.sort = VideoListModel.SortByTitle;
-                            }
-                        }else if(index == 4) {
-                            landingScreenGridView.opacity = 0;
-                            if(masterVideoModel.filter != VideoListModel.FilterFavorite)
-                            {
-                                masterVideoModel.filter = VideoListModel.FilterFavorite
-                                masterVideoModel.sort = VideoListModel.SortByTitle;
-                            }
-                        }else if(index == 5) {
-                            landingScreenGridView.opacity = 0;
-                            masterVideoModel.search = videoSearch;
-                            if(masterVideoModel.filter != VideoListModel.FilterSearch)
-                            {
-                                masterVideoModel.filter = VideoListModel.FilterSearch
-                                masterVideoModel.sort = VideoListModel.SortByTitle;
-                            }
-                        }
-                        videoListState = (videoListState + 1)%2;
-                        landingPage.closeMenu()
+            Connections {
+                target: masterVideoModel
+                onTotalChanged: {
+                    topicAll = qsTr("All (%1 videos)").arg(masterVideoModel.total);
+                    window.actionMenuModel = [topicAll, topicAdded, topicViewed, topicUnwatched, topicFavorites];
+                }
+            }
+            actionMenuModel: [topicAll, topicAdded, topicViewed, topicUnwatched, topicFavorites]
+            actionMenuPayload: ["all", "added", "viewed", "unwatched", "favorites"]
+            onActionMenuTriggered: {
+                if (selectedItem == "all") {
+                    landingScreenGridView.opacity = 0;
+                    if(masterVideoModel.filter != VideoListModel.FilterAll)
+                    {
+                        masterVideoModel.filter = VideoListModel.FilterAll
+                        masterVideoModel.sort = VideoListModel.SortByTitle;
+                    }
+                }else if(selectedItem == "added") {
+                    landingScreenGridView.opacity = 0;
+                    if(masterVideoModel.filter != VideoListModel.FilterAdded)
+                    {
+                        masterVideoModel.filter = VideoListModel.FilterAdded
+                        masterVideoModel.sort = VideoListModel.SortByAddedTime;
+                    }
+                }else if(selectedItem == "viewed") {
+                    landingScreenGridView.opacity = 0;
+                    if(masterVideoModel.filter != VideoListModel.FilterViewed)
+                    {
+                        masterVideoModel.filter = VideoListModel.FilterViewed
+                        masterVideoModel.sort = VideoListModel.SortByAccessTime;
+                    }
+                }else if(selectedItem == "unwatched") {
+                    landingScreenGridView.opacity = 0;
+                    if(masterVideoModel.filter != VideoListModel.FilterUnwatched)
+                    {
+                        masterVideoModel.filter = VideoListModel.FilterUnwatched
+                        masterVideoModel.sort = VideoListModel.SortByTitle;
+                    }
+                }else if(selectedItem == "favorites") {
+                    landingScreenGridView.opacity = 0;
+                    if(masterVideoModel.filter != VideoListModel.FilterFavorite)
+                    {
+                        masterVideoModel.filter = VideoListModel.FilterFavorite
+                        masterVideoModel.sort = VideoListModel.SortByTitle;
+                    }
+                }else if(selectedItem == "search") {
+                    landingScreenGridView.opacity = 0;
+                    masterVideoModel.search = videoSearch;
+                    if(masterVideoModel.filter != VideoListModel.FilterSearch)
+                    {
+                        masterVideoModel.filter = VideoListModel.FilterSearch
+                        masterVideoModel.sort = VideoListModel.SortByTitle;
                     }
                 }
+                videoListState = (videoListState + 1)%2;
             }
 
             Item {
                 id: landingItem
-                parent: landingPage.content
                 anchors.fill: parent
                 Component.onCompleted: {
                     if(currentVideoID != "")
                         editorModel.setPlayStatus(currentVideoID, VideoListModel.Stopped);
-                    showsearch = true;
+                    disableToolBarSearch = false;
                     videoVisible = false;
-                    fullscreen = false;
-                    showtoolbar = true;
+                    fullContent = false;
                     showVideoToolbar = false;
                 }
 
@@ -404,13 +410,13 @@ Window {
                     id: noVideosScreen
                     anchors.centerIn: parent
                     height: parent.height/2
-                    width: (scene.isLandscapeView())?(parent.width/2):(parent.width/1.2)
+                    width: (window.inLandscape)?(parent.width/2):(parent.width/1.2)
                     visible: ((masterVideoModel.total == 0)&&(!startupTimer.running))
                     Text {
                         id: noVideosScreenText1
                         width: parent.width
                         text: qsTr("No videos added yet, do you want to start watching videos?")
-                        font.pixelSize: scene.height/17
+                        font.pixelSize: window.height/17
                         anchors.top: parent.top
                         wrapMode: Text.WordWrap
                     }
@@ -418,9 +424,9 @@ Window {
                         id: noVideosScreenText2
                         width: parent.width
                         text: qsTr("Start recording your own or upload your favourite shows.")
-                        font.pixelSize: scene.height/21
+                        font.pixelSize: window.height/21
                         anchors.top: noVideosScreenText1.bottom
-                        anchors.topMargin: scene.height/24
+                        anchors.topMargin: window.height/24
                         wrapMode: Text.WordWrap
                     }
                 }
@@ -429,16 +435,17 @@ Window {
                     id: landingScreenGridView
                     type: videotype // video app = 0
                     selectionMode: multiSelectMode
+                    showHeader: true
                     clip:true
                     opacity: 0
                     anchors.fill: parent
                     anchors.leftMargin: 15
                     anchors.topMargin:3
-                    cellWidth:(width- 15) / (scene.isLandscapeView() ? 7: 4)
+                    cellWidth:(width- 15) / (window.inLandscape ? 7: 4)
                     cellHeight: cellWidth
                     model: masterVideoModel
                     defaultThumbnail: "image://theme/media/video_thumb_med"
-                    showHeader: true
+                    footerHeight: multibar.height
                     onClicked:{
                         if(multiSelectMode)
                         {
@@ -454,9 +461,9 @@ Window {
                             currentVideoID = payload.mitemid;
                             currentVideoFavorite = payload.mfavorite;
                             videoSource = payload.muri;
-                            fullscreen = false;
+                            fullContent = false;
                             labelVideoTitle = payload.mtitle;
-                            landingPage.addApplicationPage(detailViewContent);
+                            window.addPage(detailViewContent);
                             editorModel.setViewed(payload.mitemid);
                             editorModel.setPlayStatus(payload.mitemid, VideoListModel.Playing);
                         }
@@ -464,60 +471,133 @@ Window {
                     onLongPressAndHold: {
                         if(!multiSelectMode)
                         {
-                            var map = payload.mapToItem(scene, mouseX, mouseY);
+                            var map = payload.mapToItem(topItem.topItem, mouseX, mouseY);
                             contextMenu.model = [labelPlay, ((payload.mfavorite)?labelUnFavorite:labelFavorite),
                                                  labelcShare, labelMultiSelect, labelDelete];
                             contextMenu.payload = payload;
-                            contextMenu.menuX = map.x;
-                            contextMenu.menuY = map.y;
-                            contextMenu.visible = true;
+                            topItem.calcTopParent()
+                            contextMenu.setPosition( map.x, map.y );
+                            contextMenu.show();
                         }
                     }
-                }
-
-                states: [
-                    State {
-                        name: "view0"
-                        when: videoListState == 0
-                        PropertyChanges {
-                            target: landingScreenGridView
-                            opacity: 1
-                        }
-                    },
-                    State {
-                        name: "view1"
-                        when: videoListState == 1
-                        PropertyChanges {
-                            target: landingScreenGridView
-                            opacity: 1
-                        }
-                    }
-                ]
-
-                transitions: [
-                    Transition {
-                        SequentialAnimation {
-                            PropertyAnimation {
-                                properties: "opacity"
-                                duration: 500
-                                easing.type: Easing.OutSine
+                    states: [
+                        State {
+                            name: "view0"
+                            when: videoListState == 0
+                            PropertyChanges {
+                                target: landingScreenGridView
+                                opacity: 1
+                            }
+                        },
+                        State {
+                            name: "view1"
+                            when: videoListState == 1
+                            PropertyChanges {
+                                target: landingScreenGridView
+                                opacity: 1
                             }
                         }
+                    ]
+
+                    transitions: [
+                        Transition {
+                            SequentialAnimation {
+                                PropertyAnimation {
+                                    properties: "opacity"
+                                    duration: 500
+                                    easing.type: Easing.OutSine
+                                }
+                            }
+                        }
+                    ]
+                }
+
+                MediaMultiBar {
+                    id: multibar
+                    height: (multiSelectMode)?55:0
+                    width: parent.width
+                    anchors.bottom: parent.bottom
+                    anchors.left: parent.left
+                    landscape: window.inLandscape
+                    showadd: false
+                    onCancelPressed: {
+                        sharing.clearItems();
+                        masterVideoModel.clearSelected();
+                        multiSelectMode = false;
                     }
-                ]
+                    states: [
+                        State {
+                            name: "showActionBar"
+                            when: multiSelectMode
+                            PropertyChanges {
+                                target: multibar
+                                opacity:1
+                            }
+                        },
+                        State {
+                            name: "hideActionBar"
+                            when: !multiSelectMode
+                            PropertyChanges {
+                                target: multibar
+                                opacity: 0
+                            }
+                        }
+                    ]
+
+                    transitions: [
+                        Transition {
+                            reversible: true
+                            PropertyAnimation {
+                                target: multibar
+                                property: "opacity"
+                                duration: 250
+                            }
+                        }
+                    ]
+                }
             }
         }
     }  
 
     Component {
         id: detailViewContent
-        ApplicationPage {
+        AppPage {
             id: detailPage
             anchors.fill: parent
-            title: labelVideoTitle
-            fullContent: true
-            showSearch: false
-            disableSearch: true
+            pageTitle: labelVideoTitle
+
+            ModalDialog {
+                id: deleteItemDialog
+                title: labelDelete
+                acceptButtonText: labelConfirmDelete
+                cancelButtonText: labelCancel
+                onAccepted: {
+                    masterVideoModel.destroyItemByID(currentVideoID);
+                }
+                content: Item {
+                    id: contentItem
+                    anchors.fill: parent
+                    clip: true
+                    Text{
+                        id: titleText
+                        text : labelVideoTitle
+                        anchors.top: parent.top
+                        width:  parent.width
+                        horizontalAlignment: Text.AlignHCenter
+                    }
+                    Text {
+                        text: qsTr("If you delete this, it will be removed from your device")
+                        anchors.top:titleText.bottom
+                        width:  parent.width
+                        horizontalAlignment: Text.AlignHCenter
+                        font.pixelSize: theme_fontPixelSizeMedium
+                    }
+                }
+            }
+
+            Component.onCompleted: {
+                window.disableToolBarSearch = true;
+            }
 
             function playvideo(payload)
             {
@@ -532,122 +612,148 @@ Window {
                 videoToolbar.ispause = true;
                 video.source = videoSource;
                 video.play();
-                if(fullscreen)
+                if(fullContent)
                     showVideoToolbar = false;
                 else
                     showVideoToolbar = true;
                 videoVisible = true;
             }
 
-            onApplicationDataChanged: {
-                if(applicationData != undefined)
-                {
-                    console.log("Remote Call: " + applicationData);
-                    var cmd = applicationData[0];
-                    var cdata = applicationData[1];
-
-                    scene.applicationData = undefined;
-                    console.log("in detail mode");
-
-                    if (cmd == "video")
+            Connections {
+                target: window
+                onApplicationDataChanged: {
+                    if(applicationData != undefined)
                     {
-                        var itemid;
-                        if(masterVideoModel.isURN(cdata))
-                            itemid = masterVideoModel.getIDfromURN(cdata);
-                        else
-                            itemid = cdata;
+                        console.log("Remote Call: " + applicationData);
+                        var cmd = applicationData[0];
+                        var cdata = applicationData[1];
 
-                        if(itemid != "")
+                        window.applicationData = undefined;
+                        console.log("in detail mode");
+
+                        if (cmd == "video")
                         {
-                            /* need to filter on all */
-                            masterVideoModel.filter = VideoListModel.FilterAll
+                            var itemid;
+                            if(masterVideoModel.isURN(cdata))
+                                itemid = masterVideoModel.getIDfromURN(cdata);
+                            else
+                                itemid = cdata;
 
-                            if(itemid != videoThumbnailView.currentItem.mitemid)
+                            if(itemid != "")
                             {
-                                showtoolbar = false;
-                                showVideoToolbar = false;
-                                fullscreen = true;
-                                videoVisible = true;
+                                /* need to filter on all */
+                                masterVideoModel.filter = VideoListModel.FilterAll
 
-                                videoThumbnailView.show(false);
+                                if(itemid != videoThumbnailView.currentItem.mitemid)
+                                {
+                                    showVideoToolbar = false;
+                                    fullContent = true;
+                                    videoVisible = true;
 
-                                videoThumbnailView.currentIndex = masterVideoModel.itemIndex(itemid);
+                                    videoThumbnailView.show(false);
 
-                                currentVideoID = videoThumbnailView.currentItem.mitemid;
-                                currentVideoFavorite = videoThumbnailView.currentItem.mfavorite;
-                                videoSource = videoThumbnailView.currentItem.muri;
-                                labelVideoTitle = videoThumbnailView.currentItem.mtitle;
-                                editorModel.setViewed(currentVideoID);
-                                editorModel.setPlayStatus(currentVideoID, VideoListModel.Playing);
-                                videoToolbar.ispause = true;
+                                    videoThumbnailView.currentIndex = masterVideoModel.itemIndex(itemid);
 
-                                video.source = videoSource;
+                                    currentVideoID = videoThumbnailView.currentItem.mitemid;
+                                    currentVideoFavorite = videoThumbnailView.currentItem.mfavorite;
+                                    videoSource = videoThumbnailView.currentItem.muri;
+                                    labelVideoTitle = videoThumbnailView.currentItem.mtitle;
+                                    editorModel.setViewed(currentVideoID);
+                                    editorModel.setPlayStatus(currentVideoID, VideoListModel.Playing);
+                                    videoToolbar.ispause = true;
+
+                                    video.source = videoSource;
+                                }
+                                video.play();
                             }
-                            video.play();
                         }
-                    }
-                    else if (cmd == "pause")
-                    {
-                        videoToolbar.ispause = false;
-                        if(video.playing)
-                            video.pause();
+                        else if (cmd == "pause")
+                        {
+                            videoToolbar.ispause = false;
+                            if(video.playing)
+                                video.pause();
+                        }
                     }
                 }
             }
-            ShareObj {
+
+            Labs.ShareObj {
                 id: shareObj
                 shareType: MeeGoUXSharingClientQmlObj.ShareTypeVideo
             }
-            ContextMenu {
+
+            ModalContextMenu {
                 id: contextMenu
-                onTriggered: {
-                    shareObj.clearItems();
-                    if (model[index] == qsTr("Delete"))
-                    {
-                        // Delete
-                        deleteitem(currentVideoID);
-                    }
-                    else
-                    {
-                        // Share
-                        shareObj.addItem(videoSource);
-                        var svcTypes = shareObj.serviceTypes;
-                        for (x in svcTypes) {
-                            if (model[index] == svcTypes[x]) {
-                                shareObj.showContext(model[index], menuX, menuY);
-                                break;
-                            }
+                property alias model: contextActionMenu.model
+                property variant shareModel: []
+                content: ActionMenu {
+                    id: contextActionMenu
+                    onTriggered: {
+                        shareObj.clearItems();
+                        if (model[index] == labelDelete)
+                        {
+                            // Delete
+                            deleteItemDialog.show();
+                            contextMenu.hide();
+                        }
+                        else if (model[index] == labelcShare)
+                        {
+                            // Share
+                            shareObj.clearItems();
+                            shareObj.addItem(videoSource) // URI
+                            contextMenu.shareModel = shareObj.serviceTypes;
+                            contextMenu.shareModel = contextMenu.shareModel.concat(labelCancel);
+                            contextMenu.subMenuModel = contextMenu.shareModel;
+                            contextMenu.subMenuPayload = contextMenu.shareModel;
+                            contextMenu.subMenuVisible = true;
                         }
                     }
                 }
+                onSubMenuTriggered: {
+                    if (shareModel[index] == labelCancel)
+                    {
+                        contextMenu.subMenuVisible = false;
+                    }
+                    else
+                    {
+                        var svcTypes = shareObj.serviceTypes;
+                        for (x in svcTypes) {
+                            if (shareModel[index] == svcTypes[x]) {
+                                shareObj.showContext(shareModel[index], contextMenu.x, contextMenu.y);
+                                break;
+                            }
+                        }
+                        contextMenu.hide();
+                    }
+                }
             }
+
             Item {
                 id: detailItem
-                parent: detailPage.content
                 anchors.fill: parent
 
                 property alias videoThumbList: videoThumbnailView
 
                 function lockedOrientation() {
                     var newOrientation = 1
-                    //console.log("current orientation is " + scene.orientation)
-                    //console.log("current width is " + scene.width)
-                    //console.log("current height is " + scene.height)
+                    //console.log("current orientation is " + window.orientation)
+                    //console.log("current width is " + window.width)
+                    //console.log("current height is " + window.height)
 
                     // on netbook width > height, so orientation must be 1
-                    if (scene.width <= scene.height)
+                    if (window.width <= window.height)
                         newOrientation = 2
 
                     return newOrientation
                 }
                 
                 Component.onCompleted: {
-                    scene.orientation = lockedOrientation();
-                    scene.orientationLocked = true;
-                    showsearch = false;
+                    window.orientation = lockedOrientation();
+                    window.orientationLocked = true;
+                    disableToolBarSearch = true;
                     video.source = videoSource;
                     video.play();
-                    if(fullscreen)
+                    if(fullContent)
                         showVideoToolbar = false;
                     else
                         showVideoToolbar = true;
@@ -655,7 +761,7 @@ Window {
                 }
 
                 Component.onDestruction: {
-                    scene.orientationLocked = false;
+                    window.orientationLocked = false;
                 }
 
                 MediaPreviewStrip {
@@ -665,7 +771,7 @@ Window {
                     showText: false
                     itemSpacing: 0
                     anchors.top: parent.top
-                    anchors.topMargin: 5 + scene.statusBar.height + detailPage.toolbarHeight
+                    anchors.topMargin: 5 + window.statusBar.height + detailPage.toolbarHeight
                     anchors.horizontalCenter: parent.horizontalCenter
                     currentIndex: videoIndex
                     z: 1000
@@ -676,15 +782,15 @@ Window {
                 states: [
                     State {
                         name: "showtoolbar-mode"
-                        when: showtoolbar
+                        when: !fullContent
                         PropertyChanges {
                             target: videoThumbnailView
-                            anchors.topMargin: 5 + scene.statusBar.height + detailPage.toolbarHeight
+                            anchors.topMargin: 5 + window.statusBar.height + detailPage.toolbarHeight
                         }
                     },
                     State {
                         name: "hidetoolbar-mode"
-                        when: !showtoolbar
+                        when: fullContent
                         PropertyChanges {
                             target: videoThumbnailView
                             anchors.topMargin: 5
@@ -713,13 +819,13 @@ Window {
                     Video {
                         id: video
                         anchors.centerIn: parent
-                        height: ((parent.width * 3)/4) * (parent.height/scene.height)
+                        height: ((parent.width * 3)/4) * (parent.height/window.height)
                         width: parent.width
                         autoLoad: true
                         onStopped: {
                             editorModel.setPlayStatus(currentVideoID, VideoListModel.Stopped);
                             videoThumbnailView.show(true);
-                            if(fullscreen)
+                            if(fullContent)
                                 exitFullscreen();
                         }
                         onError: {
@@ -730,11 +836,11 @@ Window {
                         }
 
                         Connections {
-                            target: scene
+                            target: window
                             onForegroundChanged: {
-                                if (!scene.foreground && video.playing && !video.paused)
+                                if (!window.foreground && video.playing && !video.paused)
                                 {
-                                    if (fullscreen)
+                                    if (fullContent)
                                         exitFullscreen();
                                     editorModel.setPlayStatus(currentVideoID, VideoListModel.Paused);
                                     videoToolbar.ispause = false;
@@ -746,74 +852,71 @@ Window {
                     MouseArea {
                         anchors.fill:parent
                         onClicked:{
-                            if(fullscreen)
+                            if(fullContent)
                             {
-                                fullscreen = false;
+                                fullContent = false;
                                 showVideoToolbar = true;
-                                showtoolbar = true;
                             }
                             else
                             {
-                                showtoolbar = false;
                                 showVideoToolbar = false;
-                                fullscreen = true;
+                                fullContent = true;
                             }
                             videoVisible = true;
                             videoThumbnailView.hide();
                         }
                         onPressAndHold: {
-                            var map = mapToItem(scene, mouseX, mouseY);
-                            var ctxList = shareObj.serviceTypes;
-                            contextMenu.model = ctxList.concat(qsTr("Delete"));
-                            contextMenu.menuX = map.x;
-                            contextMenu.menuY = map.y;
-                            contextMenu.visible = true;
+                            var map = mapToItem(topItem.topItem, mouseX, mouseY);
+                            contextMenu.model = [labelcShare, labelDelete];
+                            topItem.calcTopParent()
+                            contextMenu.setPosition( map.x, map.y );
+                            contextMenu.show();
                         }
                     }
 
                     states: [
                         State {
                             name: "VideoLandscape"
-                            when: videoVisible&&!videoCropped&&scene.isLandscapeView()
+                            when: videoVisible&&!videoCropped&&window.inLandscape
                             PropertyChanges {
                                 target: videorect
-                                width: detailPage.content.width;
-                                height: detailPage.content.height;
+                                width: detailPage.width;
+                                height: detailPage.height;
                             }
                             PropertyChanges {
                                 target: video
-                                height: detailPage.content.height;
+                                height: detailPage.height;
                             }
                         },
                         State {
                             name: "VideoPortrait"
-                            when: videoVisible&&!videoCropped&&!scene.isLandscapeView()
+                            when: videoVisible&&!videoCropped&&!window.inLandscape
                             PropertyChanges {
                                 target: videorect
-                                width: detailPage.content.width;
-                                height: detailPage.content.height;
+                                width: detailPage.width;
+                                height: detailPage.height;
                             }
                             PropertyChanges {
                                 target: video
-                                height: detailPage.content.height;
+                                height: detailPage.height;
                             }
                         },
                         State {
                             name: "VideoLandscapeCropped"
-                            when: videoVisible&&videoCropped&&scene.isLandscapeView()
+                            when: videoVisible&&videoCropped&&window.inLandscape
                             PropertyChanges {
                                 target: videorect
-                                width: detailPage.content.width;
-                                height: detailPage.content.height;
+                                width: detailPage.width;
+                                height: detailPage.height;
                             }
                         },
                         State {
                             name: "VideoPortraitCropped"
-                            when: videoVisible&&videoCropped&&!scene.isLandscapeView()
+                            when: videoVisible&&videoCropped&&!window.inLandscape
                             PropertyChanges {
                                 target: videorect
-                                width: detailPage.content.width;
-                                height: detailPage.content.height;
+                                width: detailPage.width;
+                                height: detailPage.height;
                             }
                         },
                         State {
@@ -907,7 +1010,7 @@ Window {
                             when: showVideoToolbar
                             PropertyChanges {
                                 target: videoToolbar
-                                height: scene.videoToolbarHeight
+                                height: window.videoToolbarHeight
                                 opacity:1
                             }
                         },
@@ -946,53 +1049,6 @@ Window {
         }
     }
 
-    MediaMultiBar {
-        id: multibar
-        parent:  content
-        height: (multiSelectMode)?55:0
-        width: parent.width
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        landscape: scene.isLandscapeView()
-        showadd: false
-        onCancelPressed: {
-            sharing.clearItems();
-            masterVideoModel.clearSelected();
-            multiSelectMode = false;
-        }
-        onDeletePressed: {
-            if(masterVideoModel.selectionCount() > 0)
-                scene.showModalDialog(deleteMultipleItemsComponent);
-        }
-        states: [
-            State {
-                name: "showActionBar"
-                when: multiSelectMode
-                PropertyChanges {
-                    target: multibar
-                    opacity:1
-                }
-            },
-            State {
-                name: "hideActionBar"
-                when: !multiSelectMode
-                PropertyChanges {
-                    target: multibar
-                    opacity: 0
-                }
-            }
-        ]
-
-        transitions: [
-            Transition {
-                reversible: true
-                PropertyAnimation {
-                    target: multibar
-                    property: "opacity"
-                    duration: 250
-                }
-            }
-        ]
-    }
+    TopItem { id: topItem }
 }
 
