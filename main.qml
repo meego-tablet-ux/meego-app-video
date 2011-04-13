@@ -49,7 +49,8 @@ Window {
     property bool showVideoToolbar: false
     property bool videoCropped: false
     property bool videoVisible: false
-    property variant applicationData: []
+
+    signal cmdReceived(string cmd, string cdata)
 
     Timer {
         id: startupTimer
@@ -89,21 +90,21 @@ Window {
             topicAll = qsTr("All (%1 videos)").arg(masterVideoModel.total);
         }
         onItemAvailable: {
-            console.log("Item Available: " + identifier);
-            applicationData = ["video", identifier];
+            window.cmdReceived("playVideo", identifier);
         }
     }
 
     Connections {
         target: mainWindow
         onCall: {
-            console.log("Global onCall: " + parameters);
             if(parameters[0] == "orientation")
                 orientation = (orientation+1)%4;
-            else if(parameters[0] == "video")
+            else if(parameters[0] == "playVideo")
                 masterVideoModel.requestItem(parameters[1]);
+            else if(parameters[0] == "play")
+                window.cmdReceived(parameters[0], "");
             else if(parameters[0] == "pause")
-                applicationData = parameters;
+                window.cmdReceived(parameters[0], "");
         }
     }
 
@@ -113,6 +114,17 @@ Window {
             id: landingPage
             anchors.fill: parent
             pageTitle: qsTr("Videos")
+            property bool infocus: true
+            onActivated : { infocus = true; }
+            onDeactivated : { infocus = false; }
+            Component.onCompleted: {
+                if(currentVideoID != "")
+                    editorModel.setPlayStatus(currentVideoID, VideoListModel.Stopped);
+                window.disableToolBarSearch = false;
+                videoVisible = false;
+                fullContent = false;
+                showVideoToolbar = false;
+            }
 
             ModalDialog {
                 id: deleteItemDialog
@@ -150,7 +162,7 @@ Window {
 
             ModalDialog {
                 id: deleteMultipleItemsDialog
-                property int deletecount: masterVideoModel.selectionCount()
+                property int deletecount: 0
                 title: (deletecount < 2)?qsTr("Permanently delete this video?"):qsTr("Permanently delete these %1 videos?").arg(deletecount)
                 acceptButtonText: labelConfirmDelete
                 cancelButtonText:labelCancel
@@ -173,20 +185,6 @@ Window {
                 }
             }
 
-            Connections {
-                target: multibar
-                onDeletePressed: {
-                    if(masterVideoModel.selectionCount() > 0)
-                    {
-                        deleteMultipleItemsDialog.show();
-                    }
-                }
-            }
-
-            Component.onCompleted: {
-                window.disableToolBarSearch = false;
-            }
-
             function playvideo(payload)
             {
                 videoIndex = payload.mindex;
@@ -197,7 +195,7 @@ Window {
                 labelVideoTitle = payload.mtitle;
                 editorModel.setViewed(payload.mitemid);
                 editorModel.setPlayStatus(payload.mitemid, VideoListModel.Playing);
-                window.addPage(detailViewContent);
+                window.switchBook(detailViewContent);
             }
 
             Connections {
@@ -214,17 +212,12 @@ Window {
 
             Connections {
                 target: window
-                onApplicationDataChanged: {
-                    if(applicationData != undefined)
+                onCmdReceived: {
+                    if(infocus)
                     {
-                        console.log("Remote Call: " + applicationData);
-                        var cmd = applicationData[0];
-                        var cdata = applicationData[1];
+                        console.log("Landing Remote Call: " + cmd + " " + cdata);
 
-                        window.applicationData = undefined;
-                        console.log("in landing screen");
-
-                        if (cmd == "video")
+                        if (cmd == "playVideo")
                         {
                             var itemid;
                             if(masterVideoModel.isURN(cdata))
@@ -253,7 +246,6 @@ Window {
 
                                 currentVideoID = itemid;
                                 currentVideoFavorite = masterVideoModel.isFavorite(itemid);
-                                console.log("URI: " + uri);
                                 videoSource = uri;
                                 fullContent = false;
                                 labelVideoTitle = title;
@@ -397,14 +389,6 @@ Window {
             Item {
                 id: landingItem
                 anchors.fill: parent
-                Component.onCompleted: {
-                    if(currentVideoID != "")
-                        editorModel.setPlayStatus(currentVideoID, VideoListModel.Stopped);
-                    disableToolBarSearch = false;
-                    videoVisible = false;
-                    fullContent = false;
-                    showVideoToolbar = false;
-                }
 
                 Item {
                     id: noVideosScreen
@@ -520,6 +504,13 @@ Window {
                     anchors.left: parent.left
                     landscape: window.inLandscape
                     showadd: false
+                    onDeletePressed: {
+                        if(masterVideoModel.selectionCount() > 0)
+                        {
+                            deleteMultipleItemsDialog.deletecount = masterVideoModel.selectionCount();
+                            deleteMultipleItemsDialog.show();
+                        }
+                    }
                     onCancelPressed: {
                         sharing.clearItems();
                         masterVideoModel.clearSelected();
@@ -565,6 +556,9 @@ Window {
             id: detailPage
             anchors.fill: parent
             pageTitle: labelVideoTitle
+            property bool infocus: true
+            onActivated : { infocus = true; }
+            onDeactivated : { infocus = false; }
 
             ModalDialog {
                 id: deleteItemDialog
@@ -595,13 +589,8 @@ Window {
                 }
             }
 
-            Component.onCompleted: {
-                window.disableToolBarSearch = true;
-            }
-
             function playvideo(payload)
             {
-                console.log("playvideo " + payload.mtitle);
                 currentVideoID = payload.mitemid;
                 currentVideoFavorite = payload.mfavorite;
                 videoSource = payload.muri;
@@ -621,17 +610,12 @@ Window {
 
             Connections {
                 target: window
-                onApplicationDataChanged: {
-                    if(applicationData != undefined)
+                onCmdReceived: {
+                    if(infocus)
                     {
-                        console.log("Remote Call: " + applicationData);
-                        var cmd = applicationData[0];
-                        var cdata = applicationData[1];
+                        console.log("Detail Remote Call: " + cmd + " " + cdata);
 
-                        window.applicationData = undefined;
-                        console.log("in detail mode");
-
-                        if (cmd == "video")
+                        if (cmd == "playVideo")
                         {
                             var itemid;
                             if(masterVideoModel.isURN(cdata))
@@ -667,10 +651,16 @@ Window {
                                 video.play();
                             }
                         }
+                        else if (cmd == "play")
+                        {
+                            videoToolbar.ispause = true;
+                            if(!video.playing || video.paused)
+                                video.play();
+                        }
                         else if (cmd == "pause")
                         {
                             videoToolbar.ispause = false;
-                            if(video.playing)
+                            if(video.playing || !video.paused)
                                 video.pause();
                         }
                     }
@@ -696,16 +686,19 @@ Window {
                             deleteItemDialog.show();
                             contextMenu.hide();
                         }
-                        else if (model[index] == labelcShare)
+                        else
                         {
                             // Share
                             shareObj.clearItems();
                             shareObj.addItem(videoSource) // URI
-                            contextMenu.shareModel = shareObj.serviceTypes;
-                            contextMenu.shareModel = contextMenu.shareModel.concat(labelCancel);
-                            contextMenu.subMenuModel = contextMenu.shareModel;
-                            contextMenu.subMenuPayload = contextMenu.shareModel;
-                            contextMenu.subMenuVisible = true;
+                            var svcTypes = shareObj.serviceTypes;
+                            for (x in svcTypes) {
+                                if (model[index] == svcTypes[x]) {
+                                    shareObj.showContext(model[index], contextMenu.x, contextMenu.y);
+                                    break;
+                                }
+                            }
+                            contextMenu.hide();
                         }
                     }
                 }
@@ -736,10 +729,6 @@ Window {
 
                 function lockedOrientation() {
                     var newOrientation = 1
-                    //console.log("current orientation is " + window.orientation)
-                    //console.log("current width is " + window.width)
-                    //console.log("current height is " + window.height)
-
                     // on netbook width > height, so orientation must be 1
                     if (window.width <= window.height)
                         newOrientation = 2
@@ -748,9 +737,10 @@ Window {
                 }
                 
                 Component.onCompleted: {
+                    console.log("YRAAAAAAAAAAAAAAAAAAAG: COMPLETE");
+                    window.disableToolBarSearch = true;
                     window.orientation = lockedOrientation();
                     window.orientationLocked = true;
-                    disableToolBarSearch = true;
                     video.source = videoSource;
                     video.play();
                     if(fullContent)
@@ -761,6 +751,7 @@ Window {
                 }
 
                 Component.onDestruction: {
+                    console.log("YRAAAAAAAAAAAAAAAAAAAG: DESSTRUCT");
                     window.orientationLocked = false;
                 }
 
@@ -828,6 +819,13 @@ Window {
                             if(fullContent)
                                 exitFullscreen();
                         }
+                        onPlayingChanged: {
+                            if (!playing) {
+                                window.inhibitScreenSaver = false;
+                            }else {
+                                window.inhibitScreenSaver = true;
+                            }
+                        }
                         onError: {
                         }
 
@@ -867,7 +865,8 @@ Window {
                         }
                         onPressAndHold: {
                             var map = mapToItem(topItem.topItem, mouseX, mouseY);
-                            contextMenu.model = [labelcShare, labelDelete];
+                            var sharelist = shareObj.serviceTypes;
+                            contextMenu.model = sharelist.concat(labelDelete);
                             topItem.calcTopParent()
                             contextMenu.setPosition( map.x, map.y );
                             contextMenu.show();
