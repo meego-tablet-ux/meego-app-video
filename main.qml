@@ -99,6 +99,30 @@ Window {
         shareType: MeeGoUXSharingClientQmlObj.ShareTypeVideo
     }
 
+    Item {
+        id: globalItems
+        z: 1000
+        anchors.fill: parent
+
+        ModalContextMenu {
+            id: contextShareMenu
+            property alias model: contextShareActionMenu.model
+            content: ActionMenu {
+                id: contextShareActionMenu
+                onTriggered: {
+                    var svcTypes = shareObj.serviceTypes;
+                    for (x in svcTypes) {
+                        if (model[index] == svcTypes[x]) {
+                            shareObj.showContext(model[index], contextShareMenu.x, contextShareMenu.y);
+                            break;
+                        }
+                    }
+                    contextMenu.hide();
+                }
+            }
+        }
+    }
+
     Connections {
         target: mainWindow
         onCall: {
@@ -174,7 +198,7 @@ Window {
                 onAccepted: {
                     masterVideoModel.destroyItemsByID(masterVideoModel.getSelectedIDs());
                     masterVideoModel.clearSelected();
-                    multibar.sharing.clearItems();
+                    shareObj.clearItems();
                     multiSelectMode = false;
                 }
                 content: Item {
@@ -435,9 +459,9 @@ Window {
                         {
                             masterVideoModel.setSelected(payload.mitemid, !masterVideoModel.isSelected(payload.mitemid));
                             if (masterVideoModel.isSelected(payload.mitemid))
-                                multibar.sharing.addItem(payload.muri);
+                                shareObj.addItem(payload.muri);
                             else
-                                multibar.sharing.delItem(payload.muri);
+                                shareObj.delItem(payload.muri);
                         }
                         else
                         {
@@ -504,7 +528,6 @@ Window {
                     anchors.left: parent.left
                     landscape: window.inLandscape
                     showadd: false
-                    sharing: shareObj
                     onDeletePressed: {
                         if(masterVideoModel.selectionCount() > 0)
                         {
@@ -515,6 +538,16 @@ Window {
                     onCancelPressed: {
                         masterVideoModel.clearSelected();
                         multiSelectMode = false;
+                    }
+                    onSharePressed: {
+                        if(shareObj.shareCount > 0)
+                        {
+                            var map = mapToItem(topItem.topItem, fingerX, fingerY);
+                            contextShareMenu.model = shareObj.serviceTypes;
+                            topItem.calcTopParent()
+                            contextShareMenu.setPosition( map.x, map.y );
+                            contextShareMenu.show();
+                        }
                     }
                     states: [
                         State {
