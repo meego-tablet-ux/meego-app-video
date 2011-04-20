@@ -99,36 +99,10 @@ Window {
         shareType: MeeGoUXSharingClientQmlObj.ShareTypeVideo
     }
 
-    Item {
-        id: globalItems
-        z: 1000
-        anchors.fill: parent
-
-        ModalContextMenu {
-            id: contextShareMenu
-            property alias model: contextShareActionMenu.model
-            content: ActionMenu {
-                id: contextShareActionMenu
-                onTriggered: {
-                    var svcTypes = shareObj.serviceTypes;
-                    for (x in svcTypes) {
-                        if (model[index] == svcTypes[x]) {
-                            shareObj.showContext(model[index], contextShareMenu.x, contextShareMenu.y);
-                            break;
-                        }
-                    }
-                    contextMenu.hide();
-                }
-            }
-        }
-    }
-
     Connections {
         target: mainWindow
         onCall: {
-            if(parameters[0] == "orientation")
-                orientation = (orientation+1)%4;
-            else if(parameters[0] == "playVideo")
+            if(parameters[0] == "playVideo")
                 masterVideoModel.requestItem(parameters[1]);
             else if(parameters[0] == "play")
                 window.cmdReceived(parameters[0], "");
@@ -537,6 +511,7 @@ Window {
                     }
                     onCancelPressed: {
                         masterVideoModel.clearSelected();
+                        shareObj.clearItems();
                         multiSelectMode = false;
                     }
                     onSharePressed: {
@@ -579,7 +554,26 @@ Window {
                         }
                     ]
                 }
+
+                ModalContextMenu {
+                    id: contextShareMenu
+                    property alias model: contextShareActionMenu.model
+                    content: ActionMenu {
+                        id: contextShareActionMenu
+                        onTriggered: {
+                            var svcTypes = shareObj.serviceTypes;
+                            for (x in svcTypes) {
+                                if (model[index] == svcTypes[x]) {
+                                    shareObj.showContext(model[index], contextShareMenu.x, contextShareMenu.y);
+                                    break;
+                                }
+                            }
+                            contextMenu.hide();
+                        }
+                    }
+                }
             }
+            TopItem { id: topItem }
         }
     }  
 
@@ -738,19 +732,9 @@ Window {
 
                 property alias videoThumbList: videoThumbnailView
 
-                function lockedOrientation() {
-                    var newOrientation = 1
-                    // on netbook width > height, so orientation must be 1
-                    if (window.width <= window.height)
-                        newOrientation = 2
-
-                    return newOrientation
-                }
-
                 Component.onCompleted: {
                     window.disableToolBarSearch = true;
-                    window.orientation = lockedOrientation();
-                    window.orientationLocked = true;
+//                    window.orientationLock = 1;
                     video.source = videoSource;
                     video.play();
                     if(fullContent)
@@ -760,9 +744,9 @@ Window {
                     videoVisible = true;
                 }
 
-                Component.onDestruction: {
-                    window.orientationLocked = false;
-                }
+//                Component.onDestruction: {
+//                    window.orientationLock = Scene.noLock;
+//                }
 
                 MediaPreviewStrip {
                     id: videoThumbnailView
@@ -1054,9 +1038,8 @@ Window {
                     ]
                 }
             }
+            TopItem { id: topItem }
         }
     }
-
-    TopItem { id: topItem }
 }
 
