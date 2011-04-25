@@ -12,7 +12,7 @@ import MeeGo.Labs.Components 0.1 as Labs
 import QtMultimediaKit 1.1
 import MeeGo.Media 0.1
 import MeeGo.Sharing 0.1
-
+import MeeGo.App.Video.VideoPlugin 0.1
 import "functions.js" as Code
 
 Window {
@@ -49,6 +49,7 @@ Window {
     property bool showVideoToolbar: false
     property bool videoCropped: false
     property bool videoVisible: false
+    property bool playing: false
 
     signal cmdReceived(string cmd, string cdata)
 
@@ -58,6 +59,23 @@ Window {
         repeat: false
     }
 
+    Timer {
+	id: hdmiOnConnectTimer
+	interval: 500; repeat: true; running: true
+	onTriggered: {
+	    console.debug("hdmi is on  " + switcher.isHDMIconnected())
+	    if (!window.playing)
+		if (switcher.isHDMIconnected())
+		    switcher.toClone()
+		else
+		    switcher.toSingle()
+	}
+    }
+    
+    VideoSwitcher {
+	id: switcher
+    }
+    
     Component.onCompleted: {
         switchBook( landingScreenContent )
         startupTimer.start();
@@ -818,6 +836,7 @@ Window {
                             }else {
                                 window.inhibitScreenSaver = true;
                             }
+                            window.playing = palying
                         }
                         onError: {
                         }

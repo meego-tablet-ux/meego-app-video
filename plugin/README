@@ -1,0 +1,18 @@
+This MeeGoVideoSwitch class is implemented for application to do the mode switch with default HMDI resolution 640x480 and handset resolution 480x854. There are 4 modes available:
+ - single: only handset screen is active.
+ - clone: both HDMI and handset screen are active and the content on each screen are the same under their default resolution respectively
+ - extended: HDMI screen is extended above(most stable relative position) from handset screen. each screen is at their default resolution.
+ - videoExt: same as extended, but when video is played via hardware(MI-X,LibVA), video will be played on external screen only and maximized.
+
+The license part is skipped and should be same as the application.
+
+A sample code demostrating MeeGoVideoSwitch is included in the sample directory.(LibXrandr-devel is required) 4 methods are exposed to switch to corresponding mode respectively.
+ toClone
+ toSingle
+ toExtend
+ toVideoExt
+
+I tested each mode by "gst-launch playbin2 uri=/dir/to/demo.mp4" after switch. it works on 0301 and 0308 image.
+
+Note:
+ - never change mode while video is playing
