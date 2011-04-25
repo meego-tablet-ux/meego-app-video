@@ -18,6 +18,7 @@ import "functions.js" as Code
 Window {
     id: window
 
+    property string labelAppName: qsTr("Videos")
     property string topicAll: qsTr("All")
     property string topicAdded: qsTr("Recently added")
     property string topicViewed: qsTr("Recently viewed")
@@ -25,7 +26,7 @@ Window {
     property string topicFavorites: qsTr("Favorites")
 
     property string labelVideoTitle: ""
-    property string labelConfirmDelete: qsTr("Yes, Delete")
+    property string labelConfirmDelete: qsTr("Delete")
     property string labelCancel: qsTr("Cancel")
     property string videoSearch: ""
     property string videoSource: ""
@@ -37,7 +38,7 @@ Window {
     property string labelUnFavorite: qsTr("Unfavorite")
     property string labelcShare: qsTr("Share")
     property string labelDelete: qsTr("Delete")
-    property string labelMultiSelect:qsTr("Select Multiple Videos")
+    property string labelMultiSelect:qsTr("Select multiple videos")
     property bool multiSelectMode: false
 
     property int animationDuration: 500
@@ -116,7 +117,7 @@ Window {
         AppPage {
             id: landingPage
             anchors.fill: parent
-            pageTitle: qsTr("Videos")
+            pageTitle: labelAppName
             property bool infocus: true
             onActivated : {
                 infocus = true;
@@ -576,7 +577,7 @@ Window {
         AppPage {
             id: detailPage
             anchors.fill: parent
-            pageTitle: labelVideoTitle
+            pageTitle: labelAppName
             property bool infocus: true
             onActivated : { infocus = true; }
             onDeactivated : { infocus = false; }
@@ -641,6 +642,8 @@ Window {
                 currentVideoFavorite = payload.mfavorite;
                 videoSource = payload.muri;
                 labelVideoTitle = payload.mtitle;
+                console.log("PAGE TITLE CHANGED: " + labelVideoTitle);
+                detailPage.pageTitle = labelVideoTitle;
                 editorModel.setViewed(payload.mitemid);
 
                 videoToolbar.ispause = true;
