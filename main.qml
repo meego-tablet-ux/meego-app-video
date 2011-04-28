@@ -423,7 +423,7 @@ Window {
                     cellWidth:(width- 15) / (window.inLandscape ? 7: 4)
                     cellHeight: cellWidth
                     model: masterVideoModel
-                    defaultThumbnail: "image://theme/media/video_thumb_med"
+                    defaultThumbnail: "image://meegotheme/images/media/video_thumb_med"
                     footerHeight: multibar.height
                     onClicked:{
                         if(multiSelectMode)
@@ -642,8 +642,6 @@ Window {
                 currentVideoFavorite = payload.mfavorite;
                 videoSource = payload.muri;
                 labelVideoTitle = payload.mtitle;
-                console.log("PAGE TITLE CHANGED: " + labelVideoTitle);
-                detailPage.pageTitle = labelVideoTitle;
                 editorModel.setViewed(payload.mitemid);
 
                 videoToolbar.ispause = true;
