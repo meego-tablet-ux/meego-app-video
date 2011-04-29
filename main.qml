@@ -258,7 +258,7 @@ Window {
                 }
             }
 
-            ModalContextMenu {
+            ContextMenu {
                 id: contextMenu
                 property alias payload: contextActionMenu.payload
                 property alias model: contextActionMenu.model
@@ -550,7 +550,7 @@ Window {
                     ]
                 }
 
-                ModalContextMenu {
+                ContextMenu {
                     id: contextShareMenu
                     property alias model: contextShareActionMenu.model
                     content: ActionMenu {
@@ -707,7 +707,7 @@ Window {
                 }
             }
 
-            ModalContextMenu {
+            ContextMenu {
                 id: contextMenu
                 property alias model: contextActionMenu.model
                 property variant shareModel: []
