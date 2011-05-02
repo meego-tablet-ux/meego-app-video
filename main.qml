@@ -12,7 +12,7 @@ import MeeGo.Labs.Components 0.1 as Labs
 import QtMultimediaKit 1.1
 import MeeGo.Media 0.1
 import MeeGo.Sharing 0.1
-import MeeGo.App.Video.VideoPlugin 0.1
+//import MeeGo.App.Video.VideoPlugin 0.1
 import "functions.js" as Code
 
 Window {
@@ -54,16 +54,13 @@ Window {
 
     signal cmdReceived(string cmd, string cdata)
 
-    orientation: 2
-    onOrientationChanged: {orientation = 2}
-
     Timer {
         id: startupTimer
         interval: 2000
         repeat: false
     }
 
-    Timer {
+/*    Timer {
 	id: hdmiOnConnectTimer
 	interval: 500; repeat: true; running: true
 	onTriggered: {
@@ -78,7 +75,7 @@ Window {
     
     VideoSwitcher {
 	id: switcher
-    }
+    }*/
     
     Component.onCompleted: {
         switchBook( landingScreenContent )
