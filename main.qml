@@ -18,6 +18,7 @@ import "functions.js" as Code
 Window {
     id: window
 
+    property string labelAppName: qsTr("Videos")
     property string topicAll: qsTr("All")
     property string topicAdded: qsTr("Recently added")
     property string topicViewed: qsTr("Recently viewed")
@@ -25,7 +26,7 @@ Window {
     property string topicFavorites: qsTr("Favorites")
 
     property string labelVideoTitle: ""
-    property string labelConfirmDelete: qsTr("Yes, Delete")
+    property string labelConfirmDelete: qsTr("Delete")
     property string labelCancel: qsTr("Cancel")
     property string videoSearch: ""
     property string videoSource: ""
@@ -37,7 +38,7 @@ Window {
     property string labelUnFavorite: qsTr("Unfavorite")
     property string labelcShare: qsTr("Share")
     property string labelDelete: qsTr("Delete")
-    property string labelMultiSelect:qsTr("Select Multiple Videos")
+    property string labelMultiSelect:qsTr("Select multiple videos")
     property bool multiSelectMode: false
 
     property int animationDuration: 500
@@ -134,7 +135,7 @@ Window {
         AppPage {
             id: landingPage
             anchors.fill: parent
-            pageTitle: qsTr("Videos")
+            pageTitle: labelAppName
             property bool infocus: true
             onActivated : {
                 infocus = true;
@@ -214,8 +215,6 @@ Window {
                 videoSource = payload.muri;
                 fullContent = true;
                 labelVideoTitle = payload.mtitle;
-                editorModel.setViewed(payload.mitemid);
-                editorModel.setPlayStatus(payload.mitemid, VideoListModel.Playing);
                 window.switchBook(detailViewContent);
             }
 
@@ -271,15 +270,13 @@ Window {
                                 fullContent = false;
                                 labelVideoTitle = title;
                                 window.addPage(detailViewContent);
-                                editorModel.setViewed(itemid);
-                                editorModel.setPlayStatus(itemid, VideoListModel.Playing);
                             }
                         }
                     }
                 }
             }
 
-            ModalContextMenu {
+            ContextMenu {
                 id: contextMenu
                 property alias payload: contextActionMenu.payload
                 property alias model: contextActionMenu.model
@@ -444,7 +441,7 @@ Window {
                     cellWidth:(width- 15) / (window.inLandscape ? 7: 4)
                     cellHeight: cellWidth
                     model: masterVideoModel
-                    defaultThumbnail: "image://theme/media/video_thumb_med"
+                    defaultThumbnail: "image://meegotheme/images/media/video_thumb_med"
                     footerHeight: multibar.height
                     onClicked:{
                         if(multiSelectMode)
@@ -464,8 +461,6 @@ Window {
                             fullContent = false;
                             labelVideoTitle = payload.mtitle;
                             window.addPage(detailViewContent);
-                            editorModel.setViewed(payload.mitemid);
-                            editorModel.setPlayStatus(payload.mitemid, VideoListModel.Playing);
                         }
                     }
                     onLongPressAndHold: {
@@ -573,7 +568,7 @@ Window {
                     ]
                 }
 
-                ModalContextMenu {
+                ContextMenu {
                     id: contextShareMenu
                     property alias model: contextShareActionMenu.model
                     content: ActionMenu {
@@ -600,10 +595,35 @@ Window {
         AppPage {
             id: detailPage
             anchors.fill: parent
-            pageTitle: labelVideoTitle
+            pageTitle: labelAppName
             property bool infocus: true
             onActivated : { infocus = true; }
             onDeactivated : { infocus = false; }
+
+            function changestatus(videostate)
+            {
+                if(videostate == VideoListModel.Playing)
+                {
+                    // Play
+                    editorModel.setPlayStatus(currentVideoID, VideoListModel.Playing);
+                    videoToolbar.ispause = true;
+                    window.inhibitScreenSaver = true;
+                }
+                else if(videostate == VideoListModel.Paused)
+                {
+                    // Pause
+                    editorModel.setPlayStatus(currentVideoID, VideoListModel.Paused);
+                    videoToolbar.ispause = false;
+                    window.inhibitScreenSaver = false;
+                }
+                else
+                {
+                    // Stop
+                    editorModel.setPlayStatus(currentVideoID, VideoListModel.Stopped);
+                    videoToolbar.ispause = false;
+                    window.inhibitScreenSaver = false;
+                }
+            }
 
             ModalDialog {
                 id: deleteItemDialog
@@ -641,7 +661,6 @@ Window {
                 videoSource = payload.muri;
                 labelVideoTitle = payload.mtitle;
                 editorModel.setViewed(payload.mitemid);
-                editorModel.setPlayStatus(payload.mitemid, VideoListModel.Playing);
 
                 videoToolbar.ispause = true;
                 video.source = videoSource;
@@ -678,19 +697,13 @@ Window {
                                     showVideoToolbar = false;
                                     fullContent = true;
                                     videoVisible = true;
-
                                     videoThumbnailView.show(false);
-
                                     videoThumbnailView.currentIndex = masterVideoModel.itemIndex(itemid);
-
                                     currentVideoID = videoThumbnailView.currentItem.mitemid;
                                     currentVideoFavorite = videoThumbnailView.currentItem.mfavorite;
                                     videoSource = videoThumbnailView.currentItem.muri;
                                     labelVideoTitle = videoThumbnailView.currentItem.mtitle;
                                     editorModel.setViewed(currentVideoID);
-                                    editorModel.setPlayStatus(currentVideoID, VideoListModel.Playing);
-                                    videoToolbar.ispause = true;
-
                                     video.source = videoSource;
                                 }
                                 video.play();
@@ -712,7 +725,7 @@ Window {
                 }
             }
 
-            ModalContextMenu {
+            ContextMenu {
                 id: contextMenu
                 property alias model: contextActionMenu.model
                 property variant shareModel: []
@@ -747,12 +760,12 @@ Window {
             Item {
                 id: detailItem
                 anchors.fill: parent
-
                 property alias videoThumbList: videoThumbnailView
 
                 Component.onCompleted: {
                     window.disableToolBarSearch = true;
 //                    window.orientationLock = 1;
+                    editorModel.setViewed(currentVideoID);
                     video.source = videoSource;
                     video.play();
                     if(fullContent)
@@ -824,27 +837,18 @@ Window {
                         height: ((parent.width * 3)/4) * (parent.height/window.height)
                         width: parent.width
                         autoLoad: true
+                        onStarted: changestatus(VideoListModel.Playing);
+                        onResumed: changestatus(VideoListModel.Playing);
+                        onPaused: changestatus(VideoListModel.Paused);
                         onStopped: {
-                            editorModel.setPlayStatus(currentVideoID, VideoListModel.Stopped);
+                            changestatus(VideoListModel.Stopped);
                             videoThumbnailView.show(true);
                             if(fullContent)
                                 exitFullscreen();
                         }
-                        onPlayingChanged: {
-                            if (!playing) {
-                                window.inhibitScreenSaver = false;
-                            }else {
-                                window.inhibitScreenSaver = true;
-                            }
-                            window.playing = palying
-                        }
                         onError: {
+                            changestatus(VideoListModel.Stopped);
                         }
-
-                        Component.onDestruction: {
-                            console.log("Video object being destroyed");
-                        }
-
                         Connections {
                             target: window
                             onWindowActiveChanged: {
@@ -852,8 +856,6 @@ Window {
                                 {
                                     if (fullContent)
                                         exitFullscreen();
-                                    editorModel.setPlayStatus(currentVideoID, VideoListModel.Paused);
-                                    videoToolbar.ispause = false;
                                     video.pause();
                                 }
                             }
@@ -963,20 +965,18 @@ Window {
                         playvideo(videoThumbnailView.currentItem);
                     }
                     onPlayPressed: {
-                        if (video.paused)
+                        if (!video.playing || video.paused)
                         {
+                            console.log("play");
                             video.play();
-                            editorModel.setPlayStatus(currentVideoID, VideoListModel.Playing);
                         }
-                        ispause = true;
                     }
                     onPausePressed: {
-                        if (video.playing && !video.paused)
+                        if (!video.paused)
                         {
+                            console.log("pause");
                             video.pause();
-                            editorModel.setPlayStatus(currentVideoID, VideoListModel.Paused);
                         }
-                        ispause = false;
                     }
                     onNextPressed: {
                         videoThumbnailView.show(true);
