@@ -53,6 +53,9 @@ Window {
 
     signal cmdReceived(string cmd, string cdata)
 
+    orientation: 2
+    onOrientationChanged: {orientation = 2}
+
     Timer {
         id: startupTimer
         interval: 2000
@@ -135,6 +138,8 @@ Window {
                 title: labelDelete
                 acceptButtonText: labelConfirmDelete
                 cancelButtonText: labelCancel
+                width: width > parent.width ? parent.width : width
+                height: height > parent.height ? parent.height : height
                 property variant payload
                 onPayloadChanged:{
                     contentItem.title = payload.mtitle;
@@ -170,6 +175,8 @@ Window {
                 title: (deletecount < 2)?qsTr("Permanently delete this video?"):qsTr("Permanently delete these %1 videos?").arg(deletecount)
                 acceptButtonText: labelConfirmDelete
                 cancelButtonText:labelCancel
+                width: width > parent.width ? parent.width : width
+                height: height > parent.height ? parent.height : height
                 onAccepted: {
                     masterVideoModel.destroyItemsByID(masterVideoModel.getSelectedIDs());
                     masterVideoModel.clearSelected();
@@ -612,6 +619,8 @@ Window {
                 title: labelDelete
                 acceptButtonText: labelConfirmDelete
                 cancelButtonText: labelCancel
+        	width: width > parent.width ? parent.width : width
+                height: height > parent.height ? parent.height : height
                 onAccepted: {
                     masterVideoModel.destroyItemByID(currentVideoID);
                 }
