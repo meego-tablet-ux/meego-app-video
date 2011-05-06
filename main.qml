@@ -420,7 +420,7 @@ Window {
                     Text {
                         id: noVideosScreenText1
                         width: parent.width
-                        text: qsTr("No videos added yet, do you want to start watching videos?")
+                        text: qsTr("No videos have been added. Do you want to start watching videos?")
                         font.pixelSize: window.height/17
                         anchors.top: parent.top
                         wrapMode: Text.WordWrap
@@ -428,7 +428,7 @@ Window {
                     Text {
                         id: noVideosScreenText2
                         width: parent.width
-                        text: qsTr("Start recording your own or upload your favourite shows.")
+                        text: qsTr("Start recording or upload your favorite shows.")
                         font.pixelSize: window.height/21
                         anchors.top: noVideosScreenText1.bottom
                         anchors.topMargin: window.height/24
