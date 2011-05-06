@@ -1,7 +1,6 @@
 VERSION = 0.2.10
-PROJECT_NAME = meego-app-video
-
 TEMPLATE = subdirs
+SUBDIRS += plugin
 
 qmlfiles.files += *.qml *.js
 qmlfiles.path += $$INSTALL_ROOT/usr/share/$$TARGET
@@ -12,6 +11,8 @@ desktop.path += $$INSTALL_ROOT/usr/share/applications
 INSTALLS += qmlfiles desktop
 
 TRANSLATIONS += main.qml
+PROJECT_NAME = meego-app-video
+
 dist.commands += rm -fR $${PROJECT_NAME}-$${VERSION} &&
 dist.commands += git clone . $${PROJECT_NAME}-$${VERSION} &&
 dist.commands += rm -fR $${PROJECT_NAME}-$${VERSION}/.git &&

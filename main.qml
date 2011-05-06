@@ -9,10 +9,10 @@
 import Qt 4.7
 import MeeGo.Components 0.1
 import MeeGo.Labs.Components 0.1 as Labs
-import QtMultimediaKit 1.1
 import MeeGo.Media 0.1
+import QtMultimediaKit 1.1
+import MeeGo.App.Video.VideoPlugin 1.0
 import MeeGo.Sharing 0.1
-//import MeeGo.App.Video.VideoPlugin 0.1
 import "functions.js" as Code
 
 Window {
@@ -116,6 +116,10 @@ Window {
     Labs.ShareObj {
         id: shareObj
         shareType: MeeGoUXSharingClientQmlObj.ShareTypeVideo
+    }
+
+    QmlDBusVideo {
+        id: dbusControl
     }
 
     Connections {
@@ -612,6 +616,7 @@ Window {
                     editorModel.setPlayStatus(currentVideoID, VideoListModel.Playing);
                     videoToolbar.ispause = true;
                     window.inhibitScreenSaver = true;
+                    dbusControl.state = "playing";
                 }
                 else if(videostate == VideoListModel.Paused)
                 {
@@ -619,6 +624,7 @@ Window {
                     editorModel.setPlayStatus(currentVideoID, VideoListModel.Paused);
                     videoToolbar.ispause = false;
                     window.inhibitScreenSaver = false;
+                    dbusControl.state = "paused";
                 }
                 else
                 {
@@ -626,6 +632,7 @@ Window {
                     editorModel.setPlayStatus(currentVideoID, VideoListModel.Stopped);
                     videoToolbar.ispause = false;
                     window.inhibitScreenSaver = false;
+                    dbusControl.state = "stopped";
                 }
             }
 

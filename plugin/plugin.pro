@@ -1,6 +1,6 @@
 TEMPLATE = lib
 TARGET = VideoPlugin 
-QT += declarative
+QT += declarative dbus
 CONFIG += qt plugin
 OBJECTS_DIR = .obj
 MOC_DIR = .moc
@@ -12,12 +12,14 @@ DESTDIR = $$TARGET
 SOURCES += \
     plugin.cpp \
     MeeGoVideoSwitch.cpp \
-    qVideoSwitch.cpp
+    qVideoSwitch.cpp \
+    qmldbusvideo.cpp
 
 HEADERS += \
     plugin.h \
     MeeGoVideoSwitch.h \
-    qVideoSwitcher.h
+    qVideoSwitcher.h \
+    qmldbusvideo.h
 
 OTHER_FILES = qmldir
 
