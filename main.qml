@@ -13,6 +13,7 @@ import MeeGo.Media 0.1
 import QtMultimediaKit 1.1
 import MeeGo.App.Video.VideoPlugin 1.0
 import MeeGo.Sharing 0.1
+import MeeGo.Sharing.UI 0.1
 import "functions.js" as Code
 
 Window {
@@ -113,7 +114,7 @@ Window {
         }
     }
 
-    Labs.ShareObj {
+    ShareObj {
         id: shareObj
         shareType: MeeGoUXSharingClientQmlObj.ShareTypeVideo
     }
