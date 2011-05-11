@@ -777,7 +777,7 @@ Window {
 
                 Component.onCompleted: {
                     window.disableToolBarSearch = true;
-                    window.lockOrientationIn = "landscape";
+                    detailPage.lockOrientationIn = "landscape";
                     editorModel.setViewed(currentVideoID);
                     video.source = videoSource;
                     video.play();
@@ -789,7 +789,7 @@ Window {
                 }
 
                 Component.onDestruction: {
-                    window.lockOrientationIn = "";
+                    detailPage.lockOrientationIn = "";
                 }
 
                 MediaPreviewStrip {
