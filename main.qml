@@ -8,7 +8,6 @@
 
 import Qt 4.7
 import MeeGo.Components 0.1
-import MeeGo.Labs.Components 0.1 as Labs
 import MeeGo.Media 0.1
 import QtMultimediaKit 1.1
 import MeeGo.App.Video.VideoPlugin 1.0
@@ -250,7 +249,7 @@ Window {
                         {
                             var itemid;
                             if(masterVideoModel.isURN(cdata))
-                                itemid = masterVideoModel.getIDfromURN(cdata);
+                                itemid = masterVideoModel.datafromURN(cdata, MediaItem.ID);
                             else
                                 itemid = cdata;
 
@@ -450,7 +449,7 @@ Window {
                     cellWidth:(width- 15) / (window.inLandscape ? 7: 4)
                     cellHeight: cellWidth
                     model: masterVideoModel
-                    defaultThumbnail: "image://meegotheme/images/media/video_thumb_med"
+                    defaultThumbnail: "image://themedimage/images/media/video_thumb_med"
                     footerHeight: multibar.height
                     onClicked:{
                         if(multiSelectMode)
@@ -778,7 +777,7 @@ Window {
 
                 Component.onCompleted: {
                     window.disableToolBarSearch = true;
-//                    window.orientationLock = 1;
+                    window.lockOrientationIn = "landscape";
                     editorModel.setViewed(currentVideoID);
                     video.source = videoSource;
                     video.play();
@@ -789,9 +788,9 @@ Window {
                     videoVisible = true;
                 }
 
-//                Component.onDestruction: {
-//                    window.orientationLock = Scene.noLock;
-//                }
+                Component.onDestruction: {
+                    window.lockOrientationIn = "";
+                }
 
                 MediaPreviewStrip {
                     id: videoThumbnailView
