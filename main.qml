@@ -82,18 +82,6 @@ Window {
         startupTimer.start();
     }
 
-    function enterFullscreen()
-    {
-        showVideoToolbar = false;
-        fullContent = true;
-    }
-
-    function exitFullscreen()
-    {
-        fullContent = false;
-        showVideoToolbar = true;
-    }
-
     // an editor model, used to do things like tag arbitrary items as favorite/viewed
     property variant editorModel: VideoListModel {
         type:VideoListModel.Editor
@@ -147,6 +135,7 @@ Window {
                     editorModel.setPlayStatus(currentVideoID, VideoListModel.Stopped);
                 window.disableToolBarSearch = false;
                 videoVisible = false;
+                window.fullContent = false;
                 fullContent = false;
                 showVideoToolbar = false;
             }
@@ -221,9 +210,9 @@ Window {
                 currentVideoID = payload.mitemid;
                 currentVideoFavorite = payload.mfavorite;
                 videoSource = payload.muri;
-                fullContent = true;
+                window.fullContent = true;
                 labelVideoTitle = payload.mtitle;
-                window.switchBook(detailViewContent);
+                window.addPage(detailViewContent);
             }
 
             Connections {
@@ -608,6 +597,18 @@ Window {
             onActivated : { infocus = true; }
             onDeactivated : { infocus = false; }
 
+            function enterFullscreen()
+            {
+                showVideoToolbar = false;
+                fullContent = true;
+            }
+
+            function exitFullscreen()
+            {
+                fullContent = false;
+                showVideoToolbar = true;
+            }
+
             function changestatus(videostate)
             {
                 if(videostate == VideoListModel.Playing)
@@ -781,6 +782,7 @@ Window {
                     editorModel.setViewed(currentVideoID);
                     video.source = videoSource;
                     video.play();
+                    fullContent = window.fullContent;
                     if(fullContent)
                         showVideoToolbar = false;
                     else
@@ -878,15 +880,9 @@ Window {
                         anchors.fill:parent
                         onClicked:{
                             if(fullContent)
-                            {
-                                fullContent = false;
-                                showVideoToolbar = true;
-                            }
+                                exitFullscreen();
                             else
-                            {
-                                showVideoToolbar = false;
-                                fullContent = true;
-                            }
+                                enterFullscreen();
                             videoVisible = true;
                             videoThumbnailView.hide();
                         }
