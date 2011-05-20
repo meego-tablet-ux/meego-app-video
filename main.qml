@@ -51,6 +51,7 @@ Window {
     property bool videoCropped: false
     property bool videoVisible: false
     property bool playing: false
+    property bool isLandscape: !(window.inLandscape || window.inInvertedLandscape)
 
     signal cmdReceived(string cmd, string cdata)
 
@@ -135,8 +136,8 @@ Window {
                     editorModel.setPlayStatus(currentVideoID, VideoListModel.Stopped);
                 window.disableToolBarSearch = false;
                 videoVisible = false;
-                window.fullContent = false;
-                fullContent = false;
+                window.fullScreen = false;
+                fullScreen = false;
                 showVideoToolbar = false;
             }
             onDeactivated : { infocus = false; }
@@ -210,7 +211,7 @@ Window {
                 currentVideoID = payload.mitemid;
                 currentVideoFavorite = payload.mfavorite;
                 videoSource = payload.muri;
-                window.fullContent = true;
+                window.fullScreen = true;
                 labelVideoTitle = payload.mtitle;
                 window.addPage(detailViewContent);
             }
@@ -264,7 +265,7 @@ Window {
                                 currentVideoID = itemid;
                                 currentVideoFavorite = masterVideoModel.isFavorite(itemid);
                                 videoSource = uri;
-                                fullContent = false;
+                                fullScreen = false;
                                 labelVideoTitle = title;
                                 window.addPage(detailViewContent);
                             }
@@ -404,7 +405,7 @@ Window {
                     id: noVideosScreen
                     anchors.centerIn: parent
                     height: parent.height/2
-                    width: (window.inLandscape)?(parent.width/2):(parent.width/1.2)
+                    width: (window.isLandscape)?(parent.width/2):(parent.width/1.2)
                     visible: ((masterVideoModel.total == 0)&&(!startupTimer.running))
                     Text {
                         id: noVideosScreenText1
@@ -435,7 +436,7 @@ Window {
                     anchors.fill: parent
                     anchors.leftMargin: 15
                     anchors.topMargin:3
-                    cellWidth:(width- 15) / (window.inLandscape ? 7: 4)
+                    cellWidth:(width- 15) / (window.isLandscape ? 7: 4)
                     cellHeight: cellWidth
                     model: masterVideoModel
                     defaultThumbnail: "image://themedimage/images/media/video_thumb_med"
@@ -455,7 +456,7 @@ Window {
                             currentVideoID = payload.mitemid;
                             currentVideoFavorite = payload.mfavorite;
                             videoSource = payload.muri;
-                            fullContent = false;
+                            fullScreen = false;
                             labelVideoTitle = payload.mtitle;
                             window.addPage(detailViewContent);
                         }
@@ -510,7 +511,7 @@ Window {
                     width: parent.width
                     anchors.bottom: parent.bottom
                     anchors.left: parent.left
-                    landscape: window.inLandscape
+                    landscape: window.isLandscape
                     showadd: false
                     onDeletePressed: {
                         if(masterVideoModel.selectionCount() > 0)
@@ -600,12 +601,12 @@ Window {
             function enterFullscreen()
             {
                 showVideoToolbar = false;
-                fullContent = true;
+                fullScreen = true;
             }
 
             function exitFullscreen()
             {
-                fullContent = false;
+                fullScreen = false;
                 showVideoToolbar = true;
             }
 
@@ -679,7 +680,7 @@ Window {
                 videoToolbar.ispause = true;
                 video.source = videoSource;
                 video.play();
-                if(fullContent)
+                if(fullScreen)
                     showVideoToolbar = false;
                 else
                     showVideoToolbar = true;
@@ -709,7 +710,7 @@ Window {
                                 if(itemid != videoThumbnailView.currentItem.mitemid)
                                 {
                                     showVideoToolbar = false;
-                                    fullContent = true;
+                                    fullScreen = true;
                                     videoVisible = true;
                                     videoThumbnailView.show(false);
                                     videoThumbnailView.currentIndex = masterVideoModel.itemIndex(itemid);
@@ -782,8 +783,8 @@ Window {
                     editorModel.setViewed(currentVideoID);
                     video.source = videoSource;
                     video.play();
-                    fullContent = window.fullContent;
-                    if(fullContent)
+                    fullScreen = window.fullScreen;
+                    if(fullScreen)
                         showVideoToolbar = false;
                     else
                         showVideoToolbar = true;
@@ -812,7 +813,7 @@ Window {
                 states: [
                     State {
                         name: "showtoolbar-mode"
-                        when: !fullContent
+                        when: !fullScreen
                         PropertyChanges {
                             target: videoThumbnailView
                             anchors.topMargin: 5 + window.statusBar.height + detailPage.toolbarHeight
@@ -820,7 +821,7 @@ Window {
                     },
                     State {
                         name: "hidetoolbar-mode"
-                        when: fullContent
+                        when: fullScreen
                         PropertyChanges {
                             target: videoThumbnailView
                             anchors.topMargin: 5
@@ -858,7 +859,7 @@ Window {
                         onStopped: {
                             changestatus(VideoListModel.Stopped);
                             videoThumbnailView.show(true);
-                            if(fullContent)
+                            if(fullScreen)
                                 exitFullscreen();
                         }
                         onError: {
@@ -869,7 +870,7 @@ Window {
                             onWindowActiveChanged: {
                                 if (!window.isActive && video.playing && !video.paused)
                                 {
-                                    if (fullContent)
+                                    if (fullScreen)
                                         exitFullscreen();
                                     video.pause();
                                 }
@@ -879,7 +880,7 @@ Window {
                     MouseArea {
                         anchors.fill:parent
                         onClicked:{
-                            if(fullContent)
+                            if(fullScreen)
                                 exitFullscreen();
                             else
                                 enterFullscreen();
@@ -899,7 +900,7 @@ Window {
                     states: [
                         State {
                             name: "VideoLandscape"
-                            when: videoVisible&&!videoCropped&&window.inLandscape
+                            when: videoVisible&&!videoCropped&&window.isLandscape
                             PropertyChanges {
                                 target: videorect
                                 width: detailPage.width;
@@ -912,7 +913,7 @@ Window {
                         },
                         State {
                             name: "VideoPortrait"
-                            when: videoVisible&&!videoCropped&&!window.inLandscape
+                            when: videoVisible&&!videoCropped&&!window.isLandscape
                             PropertyChanges {
                                 target: videorect
                                 width: detailPage.width;
@@ -925,7 +926,7 @@ Window {
                         },
                         State {
                             name: "VideoLandscapeCropped"
-                            when: videoVisible&&videoCropped&&window.inLandscape
+                            when: videoVisible&&videoCropped&&window.isLandscape
                             PropertyChanges {
                                 target: videorect
                                 width: detailPage.width;
@@ -934,7 +935,7 @@ Window {
                         },
                         State {
                             name: "VideoPortraitCropped"
-                            when: videoVisible&&videoCropped&&!window.inLandscape
+                            when: videoVisible&&videoCropped&&!window.isLandscape
                             PropertyChanges {
                                 target: videorect
                                 width: detailPage.width;
