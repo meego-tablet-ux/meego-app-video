@@ -51,7 +51,7 @@ Window {
     property bool videoCropped: false
     property bool videoVisible: false
     property bool playing: false
-    property bool isLandscape: !(window.inLandscape || window.inInvertedLandscape)
+    property bool isLandscape: (window.inLandscape || window.inInvertedLandscape)
 
     signal cmdReceived(string cmd, string cdata)
 
