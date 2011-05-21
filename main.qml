@@ -60,23 +60,6 @@ Window {
         interval: 2000
         repeat: false
     }
-
-/*    Timer {
-	id: hdmiOnConnectTimer
-	interval: 500; repeat: true; running: true
-	onTriggered: {
-	    console.debug("hdmi is on  " + switcher.isHDMIconnected())
-	    if (!window.playing)
-		if (switcher.isHDMIconnected())
-		    switcher.toClone()
-		else
-		    switcher.toSingle()
-	}
-    }
-    
-    VideoSwitcher {
-	id: switcher
-    }*/
     
     Component.onCompleted: {
         switchBook( landingScreenContent )
@@ -147,8 +130,6 @@ Window {
                 title: labelDelete
                 acceptButtonText: labelConfirmDelete
                 cancelButtonText: labelCancel
-                width: width > parent.width ? parent.width : width
-                height: height > parent.height ? parent.height : height
                 property variant payload
                 onPayloadChanged:{
                     contentItem.title = payload.mtitle;
@@ -184,8 +165,6 @@ Window {
                 title: (deletecount < 2)?qsTr("Permanently delete this video?"):qsTr("Permanently delete these %1 videos?").arg(deletecount)
                 acceptButtonText: labelConfirmDelete
                 cancelButtonText:labelCancel
-                width: width > parent.width ? parent.width : width
-                height: height > parent.height ? parent.height : height
                 onAccepted: {
                     masterVideoModel.destroyItemsByID(masterVideoModel.getSelectedIDs());
                     masterVideoModel.clearSelected();
@@ -643,8 +622,6 @@ Window {
                 title: labelDelete
                 acceptButtonText: labelConfirmDelete
                 cancelButtonText: labelCancel
-        	width: width > parent.width ? parent.width : width
-                height: height > parent.height ? parent.height : height
                 onAccepted: {
                     masterVideoModel.destroyItemByID(currentVideoID);
                 }
