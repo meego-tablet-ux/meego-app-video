@@ -413,9 +413,9 @@ Window {
                     clip:true
                     opacity: 0
                     anchors.fill: parent
-                    anchors.leftMargin: 15
-                    anchors.topMargin:3
-                    cellWidth:(width- 15) / (window.isLandscape ? 7: 4)
+                    anchors.leftMargin: 0
+                    anchors.topMargin:5
+                    cellWidth: Math.floor(Math.min(window.width, window.height) / 4)
                     cellHeight: cellWidth
                     model: masterVideoModel
                     defaultThumbnail: "image://themedimage/images/media/video_thumb_med"
