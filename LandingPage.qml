@@ -12,13 +12,14 @@ AppPage {
     anchors.fill: parent
     pageTitle: labelAppName
     property bool infocus: true
+
     onActivated : {
         infocus = true;
         if(currentVideoID != "")
             editorModel.setPlayStatus(currentVideoID, VideoListModel.Stopped);
         window.disableToolBarSearch = false;
-        videoVisible = false;
         window.fullScreen = false;
+        window.lockOrientationIn = "noLock";
         fullScreen = false;
         showVideoToolbar = false;
     }

@@ -89,7 +89,6 @@ function playNewVideo(payload)
         showVideoToolbar = false;
     else
         showVideoToolbar = true;
-    videoVisible = true;
 }
 
 function playNextVideo() {

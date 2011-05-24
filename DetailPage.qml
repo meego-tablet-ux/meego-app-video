@@ -79,7 +79,6 @@ AppPage {
                         {
                             showVideoToolbar = false;
                             fullScreen = true;
-                            videoVisible = true;
                             videoThumbnailView.show(false);
                             videoThumbnailView.currentIndex = masterVideoModel.itemIndex(itemid);
                             currentVideoID = videoThumbnailView.currentItem.mitemid;
@@ -150,11 +149,10 @@ AppPage {
                 showVideoToolbar = false;
             else
                 showVideoToolbar = true;
-            videoVisible = true;
         }
 
         Component.onDestruction: {
-            detailPage.lockOrientationIn = "";
+            detailPage.lockOrientationIn = "noLock";
         }
 
         MediaPreviewStrip {
@@ -206,14 +204,13 @@ AppPage {
 
         Rectangle {
             id: videorect
-            width : 0
-            height : 0
+            anchors.fill: parent
             color: "black"
             Video {
                 id: video
-                anchors.centerIn: parent
-                height: ((parent.width * 3)/4) * (parent.height/window.height)
-                width: parent.width
+                anchors.bottom: parent.bottom
+                width: screenWidth
+                height: screenHeight
                 autoLoad: true
                 onStopped: {
                     videoThumbnailView.show(true);
@@ -242,7 +239,6 @@ AppPage {
                         Code.exitFullscreen();
                     else
                         Code.enterFullscreen();
-                    videoVisible = true;
                     videoThumbnailView.hide();
                 }
                 onPressAndHold: {
@@ -254,62 +250,6 @@ AppPage {
                     contextMenu.show();
                 }
             }
-
-            states: [
-                State {
-                    name: "VideoLandscape"
-                    when: videoVisible&&!videoCropped&&window.isLandscape
-                    PropertyChanges {
-                        target: videorect
-                        width: detailPage.width;
-                        height: detailPage.height;
-                    }
-                    PropertyChanges {
-                        target: video
-                        height: detailPage.height;
-                    }
-                },
-                State {
-                    name: "VideoPortrait"
-                    when: videoVisible&&!videoCropped&&!window.isLandscape
-                    PropertyChanges {
-                        target: videorect
-                        width: detailPage.width;
-                        height: detailPage.height;
-                    }
-                    PropertyChanges {
-                        target: video
-                        height: detailPage.height;
-                    }
-                },
-                State {
-                    name: "VideoLandscapeCropped"
-                    when: videoVisible&&videoCropped&&window.isLandscape
-                    PropertyChanges {
-                        target: videorect
-                        width: detailPage.width;
-                        height: detailPage.height;
-                    }
-                },
-                State {
-                    name: "VideoPortraitCropped"
-                    when: videoVisible&&videoCropped&&!window.isLandscape
-                    PropertyChanges {
-                        target: videorect
-                        width: detailPage.width;
-                        height: detailPage.height;
-                    }
-                },
-                State {
-                    name: "VideoInvisible"
-                    when: !videoVisible
-                    PropertyChanges {
-                        target: videorect
-                        width: 0;
-                        height: 0;
-                    }
-                }
-            ]
         }
 
         MediaToolbar {

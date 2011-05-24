@@ -48,7 +48,6 @@ Window {
     property int videoListState: 0
     property bool showVideoToolbar: false
     property bool videoCropped: false
-    property bool videoVisible: false
     property bool playing: false
     property bool isLandscape: (window.inLandscape || window.inInvertedLandscape)
 
