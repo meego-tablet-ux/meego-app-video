@@ -164,7 +164,7 @@ AppPage {
             showText: false
             itemSpacing: 0
             anchors.top: parent.top
-            anchors.topMargin: 5 + window.statusBar.height + detailPage.toolbarHeight
+            anchors.topMargin: window.statusBar.height + detailPage.toolbarHeight
             anchors.horizontalCenter: parent.horizontalCenter
             currentIndex: videoIndex
             z: 1000
@@ -178,7 +178,7 @@ AppPage {
                 when: !fullScreen
                 PropertyChanges {
                     target: videoThumbnailView
-                    anchors.topMargin: 5 + window.statusBar.height + detailPage.toolbarHeight
+                    anchors.topMargin: window.statusBar.height + detailPage.toolbarHeight
                 }
             },
             State {
@@ -186,7 +186,7 @@ AppPage {
                 when: fullScreen
                 PropertyChanges {
                     target: videoThumbnailView
-                    anchors.topMargin: 5
+                    anchors.topMargin: 0
                 }
             }
         ]
