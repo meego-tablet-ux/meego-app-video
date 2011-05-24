@@ -6,41 +6,110 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
+function enterFullscreen()
+{
+    showVideoToolbar = false;
+    fullScreen = true;
+}
+
+function exitFullscreen()
+{
+    fullScreen = false;
+    showVideoToolbar = true;
+}
+
 function changeItemFavorite(item) {
     editorModel.setFavorite(item.mitemid,!item.mfavorite)
 }
 
-function playNextVideo() {
-    if (contentStrip.activeContent.videoThumbList.currentIndex < (contentStrip.activeContent.videoThumbList.count -1))
+function changestatus(videostate)
+{
+    if(videostate == VideoListModel.Playing)
     {
-        contentStrip.activeContent.videoThumbList.currentIndex++;
-        currentVideoID = contentStrip.activeContent.videoThumbList.currentItem.mitemid;
-        currentVideoFavorite = contentStrip.activeContent.videoThumbList.currentItem.mfavorite;
+        // Play
+        editorModel.setPlayStatus(currentVideoID, VideoListModel.Playing);
+        videoToolbar.ispause = true;
+        window.inhibitScreenSaver = true;
+        dbusControl.state = "playing";
+    }
+    else if(videostate == VideoListModel.Paused)
+    {
+        // Pause
+        editorModel.setPlayStatus(currentVideoID, VideoListModel.Paused);
+        videoToolbar.ispause = false;
+        window.inhibitScreenSaver = false;
+        dbusControl.state = "paused";
     }
     else
     {
-        contentStrip.activeContent.videoThumbList.currentIndex = 0;
-        currentVideoID = "";
-        currentVideoFavorite = false;
+        // Stop
+        editorModel.setPlayStatus(currentVideoID, VideoListModel.Stopped);
+        videoToolbar.ispause = false;
+        window.inhibitScreenSaver = false;
+        dbusControl.state = "stopped";
     }
+}
 
-    playNewVideo(contentStrip.activeContent.videoThumbList.currentItem);
+function play()
+{
+    if (!video.playing || video.paused)
+    {
+        resourceManager.userwantsplayback = true;
+        changestatus(VideoListModel.Playing);
+        editorModel.setViewed(currentVideoID);
+    }
+}
+
+function pause()
+{
+    video.pause();
+    resourceManager.userwantsplayback = false;
+    changestatus(VideoListModel.Paused);
+}
+
+function stop()
+{
+    audio.stop();
+    resourceManager.userwantsplayback = false;
+    changestatus(VideoListModel.Stopped);
+}
+
+function playNewVideo(payload)
+{
+    currentVideoID = payload.mitemid;
+    currentVideoFavorite = payload.mfavorite;
+    videoSource = payload.muri;
+    labelVideoTitle = payload.mtitle;
+    editorModel.setViewed(payload.mitemid);
+
+    videoToolbar.ispause = true;
+    video.source = videoSource;
+    play();
+    if(fullScreen)
+        showVideoToolbar = false;
+    else
+        showVideoToolbar = true;
+    videoVisible = true;
+}
+
+function playNextVideo() {
+    videoThumbnailView.show(true);
+    if (videoThumbnailView.currentIndex < (videoThumbnailView.count -1))
+        videoThumbnailView.currentIndex++;
+    else
+        videoThumbnailView.currentIndex = 0;
+
+    playNewVideo(videoThumbnailView.currentItem);
 }
 
 function playPrevVideo() {
-    if (contentStrip.activeContent.videoThumbList.currentIndex == 0)
-    {
-        contentStrip.activeContent.videoThumbList.currentIndex = contentStrip.activeContent.videoThumbList.count - 1;
-        currentVideoID = "";
-        currentVideoFavorite = false;
-    }
+    videoThumbnailView.show(false);
+    if (videoThumbnailView.currentIndex == 0)
+        videoThumbnailView.currentIndex = videoThumbnailView.count - 1;
     else
-    {
-        contentStrip.activeContent.videoThumbList.currentIndex--;
-        currentVideoID = contentStrip.activeContent.videoThumbList.currentItem.mitemid;
-        currentVideoFavorite = contentStrip.activeContent.videoThumbList.currentItem.mfavorite;
-    }
-    playNewVideo(contentStrip.activeContent.videoThumbList.currentItem);
+        videoThumbnailView.currentIndex--;
+
+    playNewVideo(videoThumbnailView.currentItem);
 }
 
 function formatTime(time)
@@ -60,9 +129,7 @@ function openItemInDetailView(item)
 {
     videoSource = item.muri;
     videoFullscreen = false;
-//    contentStrip.push(detailViewContent,videosSideContent);
     landingPage.addApplicationPage(detailViewContent);
-//    contentStrip.activeContent.crumb.label = item.mtitle;
     labelVideoTitle = item.mtitle;
     editorModel.setViewed(item.mitemid);
 }
