@@ -83,9 +83,25 @@ Window {
         }
     }
 
-    ShareObj {
-        id: shareObj
-        shareType: MeeGoUXSharingClientQmlObj.ShareTypeVideo
+    overlayItem: Item {
+        id: globalItems
+        z: 1000
+        anchors.fill: parent
+
+        ShareObj {
+            id: shareObj
+            shareType: MeeGoUXSharingClientQmlObj.ShareTypeVideo
+            onSharingComplete: {
+                if(multiSelectMode)
+                {
+                    masterVideoModel.clearSelected();
+                    shareObj.clearItems();
+                    multiSelectMode = false;
+                }
+            }
+        }
+
+        TopItem { id: topItem }
     }
 
     QmlDBusVideo {

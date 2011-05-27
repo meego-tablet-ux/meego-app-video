@@ -157,7 +157,8 @@ AppPage {
         id: contextMenu
         property alias payload: contextActionMenu.payload
         property alias model: contextActionMenu.model
-        property variant shareModel: []
+        property int mouseX
+        property int mouseY
         content: ActionMenu {
             id: contextActionMenu
             property variant payload: undefined
@@ -193,29 +194,8 @@ AppPage {
                     // Share
                     shareObj.clearItems();
                     shareObj.addItem(payload.muri) // URI
-                    contextMenu.shareModel = shareObj.serviceTypes;
-                    contextMenu.shareModel = contextMenu.shareModel.concat(labelCancel);
-                    contextMenu.subMenuModel = contextMenu.shareModel;
-                    contextMenu.subMenuPayload = contextMenu.shareModel;
-                    contextMenu.subMenuVisible = true;
+                    shareObj.showContextTypes(contextMenu.mouseX, contextMenu.mouseY)
                 }
-            }
-        }
-        onSubMenuTriggered: {
-            if (shareModel[index] == labelCancel)
-            {
-                contextMenu.subMenuVisible = false;
-            }
-            else
-            {
-                var svcTypes = shareObj.serviceTypes;
-                for (x in svcTypes) {
-                    if (shareModel[index] == svcTypes[x]) {
-                        shareObj.showContext(shareModel[index], contextMenu.x, contextMenu.y);
-                        break;
-                    }
-                }
-                contextMenu.hide();
             }
         }
     }
@@ -347,6 +327,8 @@ AppPage {
                     contextMenu.model = [labelPlay, ((payload.mfavorite)?labelUnFavorite:labelFavorite),
                                          labelcShare, labelMultiSelect, labelDelete];
                     contextMenu.payload = payload;
+                    contextMenu.mouseX = map.x;
+                    contextMenu.mouseY = map.y;
                     topItem.calcTopParent()
                     contextMenu.setPosition( map.x, map.y );
                     contextMenu.show();
@@ -408,10 +390,7 @@ AppPage {
                 if(shareObj.shareCount > 0)
                 {
                     var map = mapToItem(topItem.topItem, fingerX, fingerY);
-                    contextShareMenu.model = shareObj.serviceTypes;
-                    topItem.calcTopParent()
-                    contextShareMenu.setPosition( map.x, map.y );
-                    contextShareMenu.show();
+                    shareObj.showContextTypes(map.x, map.y)
                 }
             }
             states: [
@@ -443,24 +422,6 @@ AppPage {
                     }
                 }
             ]
-        }
-
-        ContextMenu {
-            id: contextShareMenu
-            property alias model: contextShareActionMenu.model
-            content: ActionMenu {
-                id: contextShareActionMenu
-                onTriggered: {
-                    var svcTypes = shareObj.serviceTypes;
-                    for (x in svcTypes) {
-                        if (model[index] == svcTypes[x]) {
-                            shareObj.showContext(model[index], contextShareMenu.x, contextShareMenu.y);
-                            break;
-                        }
-                    }
-                    contextMenu.hide();
-                }
-            }
         }
     }
     TopItem { id: topItem }
