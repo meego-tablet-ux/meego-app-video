@@ -108,6 +108,12 @@ Window {
         id: dbusControl
     }
 
+    QmlSetting{
+        id: settings
+        organization: "MeeGo"
+        application:"meego-app-video"
+    }
+
     Connections {
         target: mainWindow
         onCall: {
