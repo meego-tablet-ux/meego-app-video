@@ -10,12 +10,15 @@ import Qt 4.7
 import MeeGo.Components 0.1
 
 NoContent {
-    id: noContent
-    title: qsTr("You have no videos on this tablet")
+    title: qsTr("You don't have any unwatched videos")
     description: qsTr("Download or copy your videos onto the tablet. Connect the tablet to your computer with a USB cable, via WiFi or bluetooth.\n\nYou can also record your own videos using the tablet.")
 
     button1Text: qsTr("Record a video")
     onButton1Clicked: {
         appsModel.launch( "/usr/bin/meego-qml-launcher --opengl --app meego-app-camera --fullscreen")
+    }
+    button2Text: qsTr("See all videos")
+    onButton2Clicked: {
+        selectView("all")
     }
 }

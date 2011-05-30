@@ -1,4 +1,5 @@
 import Qt 4.7
+import MeeGo.Labs.Components 0.1 as Labs
 import MeeGo.Components 0.1
 import MeeGo.Media 0.1
 import QtMultimediaKit 1.1
@@ -24,6 +25,11 @@ AppPage {
         showVideoToolbar = false;
     }
     onDeactivated : { infocus = false; }
+
+    Labs.ApplicationsModel {
+        id: appsModel
+        directories: [ "/usr/share/meego-ux-appgrid/applications", "/usr/share/applications", "~/.local/share/applications" ]
+    }
 
     ModalDialog {
         id: deleteItemDialog
@@ -99,7 +105,7 @@ AppPage {
         target: window
         onSearch: {
             videoSearch = needle;
-            landingScreenGridView.opacity = 0;
+            landingView.opacity = 0;
             masterVideoModel.search = videoSearch;
             if(masterVideoModel.filter != VideoListModel.FilterSearch)
                 masterVideoModel.filter = VideoListModel.FilterSearch
@@ -209,43 +215,47 @@ AppPage {
     actionMenuModel: [topicAll, topicAdded, topicViewed, topicUnwatched, topicFavorites]
     actionMenuPayload: ["all", "added", "viewed", "unwatched", "favorites"]
     onActionMenuTriggered: {
+        selectView(selectedItem);
+    }
+
+    function selectView(selectedItem) {
         if (selectedItem == "all") {
-            landingScreenGridView.opacity = 0;
+            landingView.opacity = 0;
             if(masterVideoModel.filter != VideoListModel.FilterAll)
             {
                 masterVideoModel.filter = VideoListModel.FilterAll
                 masterVideoModel.sort = VideoListModel.SortByTitle;
             }
         }else if(selectedItem == "added") {
-            landingScreenGridView.opacity = 0;
+            landingView.opacity = 0;
             if(masterVideoModel.filter != VideoListModel.FilterAdded)
             {
                 masterVideoModel.filter = VideoListModel.FilterAdded
                 masterVideoModel.sort = VideoListModel.SortByAddedTime;
             }
         }else if(selectedItem == "viewed") {
-            landingScreenGridView.opacity = 0;
+            landingView.opacity = 0;
             if(masterVideoModel.filter != VideoListModel.FilterViewed)
             {
                 masterVideoModel.filter = VideoListModel.FilterViewed
                 masterVideoModel.sort = VideoListModel.SortByAccessTime;
             }
         }else if(selectedItem == "unwatched") {
-            landingScreenGridView.opacity = 0;
+            landingView.opacity = 0;
             if(masterVideoModel.filter != VideoListModel.FilterUnwatched)
             {
                 masterVideoModel.filter = VideoListModel.FilterUnwatched
                 masterVideoModel.sort = VideoListModel.SortByTitle;
             }
         }else if(selectedItem == "favorites") {
-            landingScreenGridView.opacity = 0;
+            landingView.opacity = 0;
             if(masterVideoModel.filter != VideoListModel.FilterFavorite)
             {
                 masterVideoModel.filter = VideoListModel.FilterFavorite
                 masterVideoModel.sort = VideoListModel.SortByTitle;
             }
         }else if(selectedItem == "search") {
-            landingScreenGridView.opacity = 0;
+            landingView.opacity = 0;
             masterVideoModel.search = videoSearch;
             if(masterVideoModel.filter != VideoListModel.FilterSearch)
             {
@@ -261,80 +271,127 @@ AppPage {
         anchors.fill: parent
 
         Item {
+            id: landingView
+            opacity: 0
             anchors.fill: parent
+            function setNoContentComponent() {
+                if (masterVideoModel.count == 0 && !noVideoScreen.visible) {
+                    if(masterVideoModel.filter == VideoListModel.FilterFavorite) {
+                        noContentScreen.sourceComponent = noContentFavorite;
+                    } else if(masterVideoModel.filter == VideoListModel.FilterUnwatched) {
+                        noContentScreen.sourceComponent = noContentUnwatched;
+                    } else if(masterVideoModel.filter == VideoListModel.FilterViewed) {
+                        noContentScreen.sourceComponent = noContentViewed;
+                    } else if(masterVideoModel.filter == VideoListModel.FilterAdded) {
+                        noContentScreen.sourceComponent = noContentAdded;
+                    }
+                }
+            }
+            Connections {
+                target: masterVideoModel
+                onCountChanged: {
+                    //console.log("countChanged: count: " + masterVideoModel.count);
+                    landingView.setNoContentComponent();
+                }
+                onFilterChanged: {
+                    //console.log("filterChanged: count: " + masterVideoModel.count);
+                    landingView.setNoContentComponent();
+                }
+            }
             NoVideosNotification {
                 id: noVideoScreen
                 visible: ((masterVideoModel.total == 0)&&(!startupTimer.running))
             }
-        }
 
-        Rectangle {
-            id: globalbgsolid
-            anchors.fill: parent
-            color: "black"
-        }
-
-        BorderImage {
-            id: panel
-            anchors.fill: parent
-            anchors.topMargin: 8
-            anchors.leftMargin: 8
-            anchors.rightMargin: 8
-            anchors.bottomMargin: 5
-            source: "image://themedimage/widgets/apps/media/assets/content-background"
-            border.left:   8
-            border.top:    8
-            border.bottom: 8
-            border.right:  8
-        }
-
-        MediaGridView {
-            id: landingScreenGridView
-            type: videotype // video app = 0
-            selectionMode: multiSelectMode
-            showHeader: true
-            clip:true
-            opacity: 0
-            anchors.fill: parent
-            anchors.topMargin: 10
-            anchors.bottomMargin: 10
-            anchors.leftMargin: (parent.width - Math.floor(parent.width / 370)*370) / 2
-            anchors.rightMargin: anchors.leftMargin
-            model: masterVideoModel
-            defaultThumbnail: "image://themedimage/images/media/video_thumb_med"
-            footerHeight: multibar.height
-            onClicked:{
-                if(multiSelectMode)
-                {
-                    masterVideoModel.setSelected(payload.mitemid, !masterVideoModel.isSelected(payload.mitemid));
-                    if (masterVideoModel.isSelected(payload.mitemid))
-                        shareObj.addItem(payload.muri);
-                    else
-                        shareObj.delItem(payload.muri);
-                }
-                else
-                {
-                    videoIndex = payload.mindex;
-                    currentVideoID = payload.mitemid;
-                    currentVideoFavorite = payload.mfavorite;
-                    videoSource = payload.muri;
-                    fullScreen = false;
-                    labelVideoTitle = payload.mtitle;
-                    window.addPage(detailViewContent);
-                }
+            Loader {
+                id: noContentScreen
+                anchors.fill: parent
+                visible: ((masterVideoModel.total != 0)&&(masterVideoModel.count == 0)&&(!startupTimer.running))
             }
-            onLongPressAndHold: {
-                if(!multiSelectMode)
-                {
-                    var map = payload.mapToItem(topItem.topItem, mouseX, mouseY);
-                    contextMenu.model = [labelPlay, ((payload.mfavorite)?labelUnFavorite:labelFavorite),
-                                         labelcShare, labelMultiSelect, labelDelete];
-                    contextMenu.payload = payload;
-                    contextMenu.mouseX = map.x;
-                    contextMenu.mouseY = map.y;
-                    topItem.calcTopParent()
-                    contextMenu.setPosition( map.x, map.y );
-                    contextMenu.show();
+            Component {
+                id: noContentFavorite
+                NoContentFavorite {}
+            }
+            Component {
+                id: noContentUnwatched
+                NoContentUnwatched {}
+            }
+            Component {
+                id: noContentViewed
+                NoContentViewed {}
+            }
+            Component {
+                id: noContentAdded
+                NoContentAdded {}
+            }
+            Rectangle {
+                id: globalbgsolid
+                anchors.fill: parent
+                color: "black"
+            }
+
+            BorderImage {
+                id: panel
+                anchors.fill: parent
+                anchors.topMargin: 8
+                anchors.leftMargin: 8
+                anchors.rightMargin: 8
+                anchors.bottomMargin: 5
+                source: "image://themedimage/widgets/apps/media/assets/content-background"
+                border.left:   8
+                border.top:    8
+                border.bottom: 8
+                border.right:  8
+            }
+
+            MediaGridView {
+                id: landingScreenGridView
+                type: videotype // video app = 0
+                selectionMode: multiSelectMode
+                visible: !noContentScreen.visible && !noVideoScreen.visible
+                showHeader: true
+                clip:true
+                anchors.fill: parent
+                anchors.leftMargin: 0
+                anchors.topMargin:5
+                cellWidth: Math.floor(Math.min(window.width, window.height) / 4)
+                cellHeight: cellWidth
+                model: masterVideoModel
+                defaultThumbnail: "image://themedimage/images/media/video_thumb_med"
+                footerHeight: multibar.height
+                onClicked:{
+                    if(multiSelectMode)
+                    {
+                        masterVideoModel.setSelected(payload.mitemid, !masterVideoModel.isSelected(payload.mitemid));
+                        if (masterVideoModel.isSelected(payload.mitemid))
+                            shareObj.addItem(payload.muri);
+                        else
+                            shareObj.delItem(payload.muri);
+                    }
+                    else
+                    {
+                        videoIndex = payload.mindex;
+                        currentVideoID = payload.mitemid;
+                        currentVideoFavorite = payload.mfavorite;
+                        videoSource = payload.muri;
+                        fullScreen = false;
+                        labelVideoTitle = payload.mtitle;
+                        window.addPage(detailViewContent);
+                    }
+                }
+                onLongPressAndHold: {
+                    if(!multiSelectMode)
+                    {
+                        var map = payload.mapToItem(topItem.topItem, mouseX, mouseY);
+                        contextMenu.model = [labelPlay, ((payload.mfavorite)?labelUnFavorite:labelFavorite),
+                                             labelcShare, labelMultiSelect, labelDelete];
+                        contextMenu.payload = payload;
+                        contextMenu.mouseX = map.x;
+                        contextMenu.mouseY = map.y;
+                        topItem.calcTopParent()
+                        contextMenu.setPosition( map.x, map.y );
+                        contextMenu.show();
+                    }
                 }
             }
             states: [
@@ -342,7 +399,7 @@ AppPage {
                     name: "view0"
                     when: videoListState == 0
                     PropertyChanges {
-                        target: landingScreenGridView
+                        target: landingView
                         opacity: 1
                     }
                 },
@@ -350,7 +407,7 @@ AppPage {
                     name: "view1"
                     when: videoListState == 1
                     PropertyChanges {
-                        target: landingScreenGridView
+                        target: landingView
                         opacity: 1
                     }
                 }

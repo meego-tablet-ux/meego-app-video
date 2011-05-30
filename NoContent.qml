@@ -7,52 +7,76 @@
  */
 
 import Qt 4.7
+import MeeGo.Components 0.1
 
-Item {
-    id: noContents
-    property alias notification: notificationContent.children
-    property alias help: helpContent.children
-    anchors.fill: parent
-    //TODO check margins
-    anchors.margins: 20
-    anchors.bottomMargin: anchors.margins + toolbar.height
-    Column {
-        id: col
+NoContentBase {
+    id: noContent
+    property string title: ""
+    property string description: ""
+    property string button1Text: ""
+    property string button2Text: ""
+    signal button1Clicked();
+    signal button2Clicked();
+    notification: Item {
+        id: notif
         width: parent.width
-        Loader {
+        height: isLandscape ? Math.max(col.height, buttons.height) : col.height + buttons.height
+        Grid {
             width: parent.width
-            sourceComponent: separator
-        }
-        Item {
-            id: notificationContent
-            //TODO check margins
-            width: parent.width - 2*10
-            height: childrenRect.height
-            anchors.horizontalCenter: parent.horizontalCenter
-        }
-        Loader {
-            width: parent.width
-            sourceComponent: separator
-        }
-        Item {
-            id: helpContent
-            //TODO check margins
-            width: parent.width
-            height: noContents.height - 2*20 - notificationContent.height
-            anchors.horizontalCenter: parent.horizontalCenter
-        }
-    }
-    Component {
-        id: separator
-        Item {
-            width: parent.width
-            // TODO check margin
-            height: 20
-            Image {
-                anchors.verticalCenter: parent.verticalCenter
-                width: parent.width
-                // TODO this probably is not correct separator
-                source: "image://themedimage/images/dialog-separator"
+            columns: isLandscape ? 2 : 1
+            Column {
+                id: col
+                width: isLandscape ? parent.width - buttons.width : parent.width
+                Text {
+                    width: parent.width
+                    text: title
+                    font.pixelSize: theme_fontPixelSizeLarge
+                    wrapMode: Text.WordWrap
+                    height: paintedHeight + 20
+                }
+                Text {
+                    id: desc
+                    visible: description != ""
+                    width: parent.width
+                    text: description
+                    font.pixelSize: theme_fontPixelSizeNormal
+                    wrapMode: Text.WordWrap
+                    height: paintedHeight
+                }
+            }
+            Item {
+                width: isLandscape ? buttons.width : notif.width
+                height: isLandscape ? notif.height : buttons.height
+                Grid {
+                    id: buttons
+                    columns: isLandscape ? 1 : 3
+                    visible: button1Text != "" || button2Text != ""
+                    anchors.verticalCenter: isLandscape ? parent.verticalCenter : undefined
+                    anchors.horizontalCenter: isLandscape ? undefined : parent.horizontalCenter
+                    width: isLandscape ? Math.max(button1.width, button2.width) : button1.width + padding.width + button2.width
+
+                    Button {
+                        id: button1
+                        text: button1Text
+                        onClicked: {
+                            noContent.button1Clicked()
+                        }
+                    }
+                    Item {
+                        id: padding
+                        visible: button2.visible
+                        width: 100
+                        height: button2.height
+                    }
+                    Button {
+                        id: button2
+                        visible: button2Text != ""
+                        text: button2Text
+                        onClicked: {
+                            noContent.button2Clicked()
+                        }
+                    }
+                }
             }
         }
     }
