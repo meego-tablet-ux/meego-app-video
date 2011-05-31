@@ -274,6 +274,25 @@ AppPage {
             id: landingView
             opacity: 0
             anchors.fill: parent
+            Rectangle {
+                id: globalbgsolid
+                anchors.fill: parent
+                color: "black"
+            }
+
+            BorderImage {
+                id: panel
+                anchors.fill: parent
+                anchors.topMargin: 8
+                anchors.leftMargin: 8
+                anchors.rightMargin: 8
+                anchors.bottomMargin: 5
+                source: "image://themedimage/widgets/apps/media/content-background"
+                border.left:   8
+                border.top:    8
+                border.bottom: 8
+                border.right:  8
+            }
             function setNoContentComponent() {
                 if (masterVideoModel.count == 0 && !noVideoScreen.visible) {
                     noContentScreen.visible = true
@@ -328,25 +347,6 @@ AppPage {
                 id: noContentAdded
                 NoContentAdded {}
             }
-            Rectangle {
-                id: globalbgsolid
-                anchors.fill: parent
-                color: "black"
-            }
-
-            BorderImage {
-                id: panel
-                anchors.fill: parent
-                anchors.topMargin: 8
-                anchors.leftMargin: 8
-                anchors.rightMargin: 8
-                anchors.bottomMargin: 5
-                source: "image://themedimage/widgets/apps/media/assets/content-background"
-                border.left:   8
-                border.top:    8
-                border.bottom: 8
-                border.right:  8
-            }
 
             MediaGridView {
                 id: landingScreenGridView
@@ -356,10 +356,10 @@ AppPage {
                 showHeader: true
                 clip:true
                 anchors.fill: parent
-                anchors.leftMargin: 0
-                anchors.topMargin:5
-                cellWidth: Math.floor(Math.min(window.width, window.height) / 4)
-                cellHeight: cellWidth
+                anchors.topMargin: 10
+                anchors.bottomMargin: 10
+                anchors.leftMargin: (parent.width - Math.floor(parent.width / 370)*370) / 2
+                anchors.rightMargin: anchors.leftMargin
                 model: masterVideoModel
                 defaultThumbnail: "image://themedimage/images/media/video_thumb_med"
                 footerHeight: multibar.height

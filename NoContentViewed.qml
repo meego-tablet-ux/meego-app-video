@@ -7,7 +7,7 @@
  */
 
 import Qt 4.7
-import MeeGo.Components 0.1
+import MeeGo.Media 0.1
 
 NoContent {
     title: qsTr("You haven't viewed any videos recently")
