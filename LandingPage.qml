@@ -276,6 +276,7 @@ AppPage {
             anchors.fill: parent
             function setNoContentComponent() {
                 if (masterVideoModel.count == 0 && !noVideoScreen.visible) {
+                    noContentScreen.visible = true
                     if(masterVideoModel.filter == VideoListModel.FilterFavorite) {
                         noContentScreen.sourceComponent = noContentFavorite;
                     } else if(masterVideoModel.filter == VideoListModel.FilterUnwatched) {
@@ -285,6 +286,9 @@ AppPage {
                     } else if(masterVideoModel.filter == VideoListModel.FilterAdded) {
                         noContentScreen.sourceComponent = noContentAdded;
                     }
+                } else {
+                    noContentScreen.visible = false
+                    noContentScreen.sourceComponent = undefined
                 }
             }
             Connections {
@@ -306,7 +310,7 @@ AppPage {
             Loader {
                 id: noContentScreen
                 anchors.fill: parent
-                visible: ((masterVideoModel.total != 0)&&(masterVideoModel.count == 0)&&(!startupTimer.running))
+                visible: false
             }
             Component {
                 id: noContentFavorite
