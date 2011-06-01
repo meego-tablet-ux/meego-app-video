@@ -19,9 +19,8 @@ AppPage {
         if(currentVideoID != "")
             editorModel.setPlayStatus(currentVideoID, VideoListModel.Stopped);
         window.disableToolBarSearch = false;
-        window.fullScreen = false;
-        window.lockOrientationIn = "noLock";
         fullScreen = false;
+        window.lockOrientationIn = "noLock";
         showVideoToolbar = false;
     }
     onDeactivated : { infocus = false; }
@@ -96,7 +95,6 @@ AppPage {
         currentVideoID = payload.mitemid;
         currentVideoFavorite = payload.mfavorite;
         videoSource = payload.muri;
-        window.fullScreen = true;
         labelVideoTitle = payload.mtitle;
         window.addPage(detailViewContent);
     }
@@ -150,7 +148,6 @@ AppPage {
                         currentVideoID = itemid;
                         currentVideoFavorite = masterVideoModel.isFavorite(itemid);
                         videoSource = uri;
-                        fullScreen = false;
                         labelVideoTitle = title;
                         window.addPage(detailViewContent);
                     }
@@ -378,7 +375,6 @@ AppPage {
                         currentVideoID = payload.mitemid;
                         currentVideoFavorite = payload.mfavorite;
                         videoSource = payload.muri;
-                        fullScreen = false;
                         labelVideoTitle = payload.mtitle;
                         window.addPage(detailViewContent);
                     }

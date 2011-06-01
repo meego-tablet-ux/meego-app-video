@@ -77,8 +77,7 @@ AppPage {
 
                         if(itemid != videoThumbnailView.currentItem.mitemid)
                         {
-                            showVideoToolbar = false;
-                            fullScreen = true;
+                            Code.enterFullscreen();
                             videoThumbnailView.show(false);
                             videoThumbnailView.currentIndex = masterVideoModel.itemIndex(itemid);
                             currentVideoID = videoThumbnailView.currentItem.mitemid;
@@ -144,11 +143,7 @@ AppPage {
             detailPage.lockOrientationIn = "landscape";
             video.source = videoSource;
             Code.play();
-            fullScreen = window.fullScreen;
-            if(fullScreen)
-                showVideoToolbar = false;
-            else
-                showVideoToolbar = true;
+            Code.enterFullscreen();
         }
 
         Component.onDestruction: {
