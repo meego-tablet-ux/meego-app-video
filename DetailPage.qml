@@ -208,6 +208,7 @@ AppPage {
                 height: screenHeight
                 autoLoad: true
                 onStopped: {
+                    Code.changestatus(VideoListModel.Stopped);
                     videoThumbnailView.show(true);
                     if(fullScreen)
                         exitFullscreen();
