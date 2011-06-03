@@ -214,6 +214,7 @@ AppPage {
                         exitFullscreen();
                 }
                 onError: {
+                    console.log("Video Error: " + errorString);
                     Code.changestatus(VideoListModel.Stopped);
                 }
                 Connections {
