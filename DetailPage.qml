@@ -215,6 +215,8 @@ AppPage {
                 }
                 onError: {
                     Code.changestatus(VideoListModel.Stopped);
+                    info.text = qsTr("Sorry we are unable to play this content.")
+                    info.show()
                 }
                 Connections {
                     target: window
@@ -227,6 +229,12 @@ AppPage {
                         }
                     }
                 }
+            }
+            InfoBar {
+                id: info
+                // TODO check visuals
+                width: parent.width - 2*20
+                anchors.horizontalCenter: parent.horizontalCenter
             }
             MouseArea {
                 anchors.fill:parent
