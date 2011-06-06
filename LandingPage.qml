@@ -433,7 +433,6 @@ AppPage {
             anchors.bottom: parent.bottom
             anchors.left: parent.left
             landscape: window.isLandscape
-            showadd: false
             onDeletePressed: {
                 if(masterVideoModel.selectionCount() > 0)
                 {
