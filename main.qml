@@ -35,40 +35,17 @@ Window {
     property string labelMultiSelect:qsTr("Select multiple videos")
     property bool multiSelectMode: false
     property variant targetState: StateData {}
-    property variant currentState: StateData {
-        onPositionChanged: {
-            console.log("POSITION: " + currentState.position);
-        }
-        onUriChanged: {
-            console.log("URI: " + currentState.uri);
-        }
-        onPageChanged: {
-            console.log("PAGE: " + currentState.page);
-        }
-        onFilterChanged: {
-            console.log("FILTER: " + currentState.filter);
-        }
-        onCommandChanged: {
-            console.log("COMMAND: " + currentState.command);
-        }
-    }
+    property variant currentState: StateData {}
 
     property int videoToolbarHeight: 55
     property int videoThumblistHeight: 75
     property bool isLandscape: (window.inLandscape || window.inInvertedLandscape)
 
     signal setState()
-    signal quietCmdReceived(string cmd)
 
     property variant resourceManager: ResourceManager {
         name: "player"
         type: ResourceManager.VideoApp
-        onStartPlaying: {
-            window.quietCmdReceived("play");
-        }
-        onStopPlaying: {
-            window.quietCmdReceived("pause");
-        }
     }
 
     SaveRestoreState {
@@ -125,6 +102,7 @@ Window {
                                 stateManager.value("position"),
                                 stateManager.value("filter"));
                 window.setState();
+                stateManager.invalidate();
             }
         }
     }

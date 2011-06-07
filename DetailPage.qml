@@ -91,22 +91,17 @@ AppPage {
                 }
             }
         }
-        onQuietCmdReceived: {
+    }
+
+    Connections {
+        target: resourceManager
+        onStartPlaying: {
             if(infocus)
-            {
-                if (cmd == "play")
-                {
-                    video.play();
-                }
-                else if (cmd == "pause")
-                {
-                    video.pause();
-                }
-                else if (cmd == "stop")
-                {
-                    video.stop();
-                }
-            }
+                video.play();
+        }
+        onStopPlaying: {
+            if(infocus)
+                video.pause();
         }
     }
 
@@ -233,8 +228,8 @@ AppPage {
                 }
                 Connections {
                     target: window
-                    onWindowActiveChanged: {
-                        if (!window.isActive && video.playing && !video.paused)
+                    onIsActiveWindowChanged: {
+                        if (!window.isActiveWindow && video.playing && !video.paused)
                         {
                             if (fullScreen)
                                 Code.exitFullscreen();
