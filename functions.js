@@ -75,26 +75,26 @@ function changestatus(videostate)
     if(videostate == VideoListModel.Playing)
     {
         // Play
+        currentState.command = "play";
         editorModel.setPlayStatus(videoThumbnailView.currentItem.mitemid, VideoListModel.Playing);
         videoToolbar.ispause = true;
         window.inhibitScreenSaver = true;
-        dbusControl.state = "playing";
     }
     else if(videostate == VideoListModel.Paused)
     {
         // Pause
+        currentState.command = "pause";
         editorModel.setPlayStatus(videoThumbnailView.currentItem.mitemid, VideoListModel.Paused);
         videoToolbar.ispause = false;
         window.inhibitScreenSaver = false;
-        dbusControl.state = "paused";
     }
     else
     {
         // Stop
+        currentState.command = "stop";
         editorModel.setPlayStatus(videoThumbnailView.currentItem.mitemid, VideoListModel.Stopped);
         videoToolbar.ispause = false;
         window.inhibitScreenSaver = false;
-        dbusControl.state = "stopped";
     }
 }
 

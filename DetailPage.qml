@@ -13,7 +13,10 @@ AppPage {
     pageTitle: labelAppName
     property bool infocus: true
     property bool showVideoToolbar: false
-    onActivated : { infocus = true; }
+    onActivated : {
+        infocus = true;
+        currentState.page = 1;
+    }
     onDeactivated : { infocus = false; }
 
     function playvideo(fullscreen) // set the video up with the targetState
@@ -221,6 +224,12 @@ AppPage {
                     Code.changestatus(VideoListModel.Stopped);
                     info.text = qsTr("Sorry we are unable to play this content.")
                     info.show()
+                }
+                onPositionChanged: {
+                    currentState.position = video.position;
+                }
+                onSourceChanged: {
+                    currentState.uri = video.source;
                 }
                 Connections {
                     target: window

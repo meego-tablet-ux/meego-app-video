@@ -18,6 +18,7 @@ AppPage {
 
     onActivated : {
         infocus = true;
+        currentState.page = 0;
         window.disableToolBarSearch = false;
         fullScreen = false;
         window.lockOrientationIn = "noLock";

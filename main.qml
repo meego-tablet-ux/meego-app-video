@@ -35,6 +35,23 @@ Window {
     property string labelMultiSelect:qsTr("Select multiple videos")
     property bool multiSelectMode: false
     property variant targetState: StateData {}
+    property variant currentState: StateData {
+        onPositionChanged: {
+            console.log("POSITION: " + currentState.position);
+        }
+        onUriChanged: {
+            console.log("URI: " + currentState.uri);
+        }
+        onPageChanged: {
+            console.log("PAGE: " + currentState.page);
+        }
+        onFilterChanged: {
+            console.log("FILTER: " + currentState.filter);
+        }
+        onCommandChanged: {
+            console.log("COMMAND: " + currentState.command);
+        }
+    }
 
     property int videoToolbarHeight: 55
     property int videoThumblistHeight: 75
@@ -51,6 +68,18 @@ Window {
         }
         onStopPlaying: {
             window.quietCmdReceived("pause");
+        }
+    }
+
+    SaveRestoreState {
+        id: stateManager
+        onSaveRequired: {
+            setValue("page", currentState.page);
+            setValue("uri", currentState.uri);
+            setValue("command", currentState.command);
+            setValue("position", currentState.position);
+            setValue("filter", currentState.filter);
+            sync();
         }
     }
 
@@ -76,6 +105,9 @@ Window {
         type:VideoListModel.ListofAll
         limit: 0
         sort: VideoListModel.SortByTitle
+        onFilterChanged: {
+            currentState.filter = masterVideoModel.filter;
+        }
         onTotalChanged: {
             topicAll = qsTr("All (%1 videos)").arg(masterVideoModel.total);
         }
@@ -83,6 +115,17 @@ Window {
             var itemid = Code.getID(identifier);
             targetState.uri = masterVideoModel.datafromID(itemid, MediaItem.URI);
             window.setState();
+        }
+        onDatabaseInitComplete: {
+            if(stateManager.restoreRequired)
+            {
+                targetState.set(stateManager.value("page"),
+                                stateManager.value("command"),
+                                stateManager.value("uri"),
+                                stateManager.value("position"),
+                                stateManager.value("filter"));
+                window.setState();
+            }
         }
     }
 
@@ -105,10 +148,6 @@ Window {
         }
 
         TopItem { id: topItem }
-    }
-
-    QmlDBusVideo {
-        id: dbusControl
     }
 
     QmlSetting{
