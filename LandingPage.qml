@@ -13,15 +13,14 @@ AppPage {
     anchors.fill: parent
     pageTitle: labelAppName
     property bool infocus: true
+    property string videoSearch: ""
+    property int videoListState: 0
 
     onActivated : {
         infocus = true;
-        if(currentVideoID != "")
-            editorModel.setPlayStatus(currentVideoID, VideoListModel.Stopped);
         window.disableToolBarSearch = false;
         fullScreen = false;
         window.lockOrientationIn = "noLock";
-        showVideoToolbar = false;
     }
     onDeactivated : { infocus = false; }
 
@@ -89,16 +88,6 @@ AppPage {
         }
     }
 
-    function playvideo(payload)
-    {
-        videoIndex = payload.mindex;
-        currentVideoID = payload.mitemid;
-        currentVideoFavorite = payload.mfavorite;
-        videoSource = payload.muri;
-        labelVideoTitle = payload.mtitle;
-        window.addPage(detailViewContent);
-    }
-
     Connections {
         target: window
         onSearch: {
@@ -111,46 +100,23 @@ AppPage {
         }
     }
 
+    function playvideo(payload)
+    {
+        targetState.set(1, "play", payload.muri, 0, -1);
+        window.addPage(detailViewContent);
+    }
+
     Connections {
         target: window
-        onCmdReceived: {
+        onSetState: {
             if(infocus)
             {
-                console.log("Landing Remote Call: " + cmd + " " + cdata);
+                if(targetState.filter >= 0)
+                    masterVideoModel.filter = targetState.filter;
 
-                if (cmd == "playVideo")
+                if((targetState.page == 1)&&(targetState.command != "")&&(targetState.uri != "")) // Goto DetailPage
                 {
-                    var itemid;
-                    if(masterVideoModel.isURN(cdata))
-                        itemid = masterVideoModel.datafromURN(cdata, MediaItem.ID);
-                    else
-                        itemid = cdata;
-
-                    if(itemid != "")
-                    {
-                        /* need to filter on all */
-                        masterVideoModel.filter = VideoListModel.FilterAll
-
-                        videoIndex = masterVideoModel.itemIndex(itemid);
-                        var title;
-                        var uri;
-                        if(masterVideoModel.isURN(cdata))
-                        {
-                            title = masterVideoModel.getTitlefromURN(cdata);
-                            uri = masterVideoModel.getURIfromURN(cdata);
-                        }
-                        else
-                        {
-                            title = masterVideoModel.getTitlefromID(cdata);
-                            uri = masterVideoModel.getURIfromID(cdata);
-                        }
-
-                        currentVideoID = itemid;
-                        currentVideoFavorite = masterVideoModel.isFavorite(itemid);
-                        videoSource = uri;
-                        labelVideoTitle = title;
-                        window.addPage(detailViewContent);
-                    }
+                    window.addPage(detailViewContent);
                 }
             }
         }
@@ -310,11 +276,9 @@ AppPage {
             Connections {
                 target: masterVideoModel
                 onCountChanged: {
-                    //console.log("countChanged: count: " + masterVideoModel.count);
                     landingView.setNoContentComponent();
                 }
                 onFilterChanged: {
-                    //console.log("filterChanged: count: " + masterVideoModel.count);
                     landingView.setNoContentComponent();
                 }
             }
@@ -371,12 +335,7 @@ AppPage {
                     }
                     else
                     {
-                        videoIndex = payload.mindex;
-                        currentVideoID = payload.mitemid;
-                        currentVideoFavorite = payload.mfavorite;
-                        videoSource = payload.muri;
-                        labelVideoTitle = payload.mtitle;
-                        window.addPage(detailViewContent);
+                        landingPage.playvideo(payload);
                     }
                 }
                 onLongPressAndHold: {

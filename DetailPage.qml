@@ -12,17 +12,32 @@ AppPage {
     anchors.fill: parent
     pageTitle: labelAppName
     property bool infocus: true
+    property bool showVideoToolbar: false
     onActivated : { infocus = true; }
     onDeactivated : { infocus = false; }
 
-    property variant resourceManager: ResourceManager {
-        name: "player"
-        type: ResourceManager.VideoApp
-        onStartPlaying: {
-            video.play();
+    function playvideo(fullscreen) // set the video up with the targetState
+    {
+        if(targetState.uri != "")
+        {
+            var itemid = masterVideoModel.datafromURI(targetState.uri, MediaItem.ID);
+
+            if(itemid != "")
+            {
+                if(fullscreen)
+                    Code.enterFullscreen();
+                videoThumbnailView.hide();
+                if(video.source != targetState.uri)
+                {
+                    videoThumbnailView.currentIndex = masterVideoModel.itemIndex(itemid);
+                    video.source = videoThumbnailView.currentItem.muri;
+                }
+                Code.startFromPosition(targetState.command);
+            }
         }
-        onStopPlaying: {
-            video.pause();
+        else
+        {
+            Code.startFromPosition(targetState.command);
         }
     }
 
@@ -32,7 +47,7 @@ AppPage {
         acceptButtonText: labelConfirmDelete
         cancelButtonText: labelCancel
         onAccepted: {
-            masterVideoModel.destroyItemByID(currentVideoID);
+            masterVideoModel.destroyItemByID(videoThumbnailView.currentItem.mitemid);
         }
         content: Item {
             id: contentItem
@@ -40,7 +55,7 @@ AppPage {
             clip: true
             Text{
                 id: titleText
-                text : labelVideoTitle
+                text : videoThumbnailView.currentItem.mtitle
                 anchors.top: parent.top
                 width:  parent.width
                 horizontalAlignment: Text.AlignHCenter
@@ -57,45 +72,36 @@ AppPage {
 
     Connections {
         target: window
-        onCmdReceived: {
+        onSetState: {
             if(infocus)
             {
-                console.log("Detail Remote Call: " + cmd + " " + cdata);
+                if(targetState.filter >= 0)
+                    masterVideoModel.filter = targetState.filter;
 
-                if (cmd == "playVideo")
+                if(targetState.page == 0) // Goto LandingPage
                 {
-                    var itemid;
-                    if(masterVideoModel.isURN(cdata))
-                        itemid = masterVideoModel.getIDfromURN(cdata);
-                    else
-                        itemid = cdata;
-
-                    if(itemid != "")
-                    {
-                        /* need to filter on all */
-                        masterVideoModel.filter = VideoListModel.FilterAll
-
-                        if(itemid != videoThumbnailView.currentItem.mitemid)
-                        {
-                            Code.enterFullscreen();
-                            videoThumbnailView.show(false);
-                            videoThumbnailView.currentIndex = masterVideoModel.itemIndex(itemid);
-                            currentVideoID = videoThumbnailView.currentItem.mitemid;
-                            currentVideoFavorite = videoThumbnailView.currentItem.mfavorite;
-                            videoSource = videoThumbnailView.currentItem.muri;
-                            labelVideoTitle = videoThumbnailView.currentItem.mtitle;
-                            video.source = videoSource;
-                        }
-                        Code.play();
-                    }
+                    window.popPage();
                 }
-                else if (cmd == "play")
+                else // Goto DetailPage
                 {
-                    Code.play();
+                    detailPage.playvideo(true);
+                }
+            }
+        }
+        onQuietCmdReceived: {
+            if(infocus)
+            {
+                if (cmd == "play")
+                {
+                    video.play();
                 }
                 else if (cmd == "pause")
                 {
-                    Code.pause();
+                    video.pause();
+                }
+                else if (cmd == "stop")
+                {
+                    video.stop();
                 }
             }
         }
@@ -119,7 +125,7 @@ AppPage {
                 {
                     // Share
                     shareObj.clearItems();
-                    shareObj.addItem(videoSource) // URI
+                    shareObj.addItem(video.source) // URI
                     var svcTypes = shareObj.serviceTypes;
                     for (x in svcTypes) {
                         if (model[index] == svcTypes[x]) {
@@ -141,13 +147,12 @@ AppPage {
         Component.onCompleted: {
             window.disableToolBarSearch = true;
             detailPage.lockOrientationIn = "landscape";
-            video.source = videoSource;
-            Code.play();
-            Code.enterFullscreen();
+            detailPage.playvideo(true);
         }
 
         Component.onDestruction: {
             detailPage.lockOrientationIn = "noLock";
+            editorModel.setPlayStatus(videoThumbnailView.currentItem.mitemid, VideoListModel.Stopped);
         }
 
         MediaPreviewStrip {
@@ -159,7 +164,6 @@ AppPage {
             anchors.top: parent.top
             anchors.topMargin: window.statusBar.height + detailPage.toolbarHeight
             anchors.horizontalCenter: parent.horizontalCenter
-            currentIndex: videoIndex
             z: 1000
             onClicked: {
                 Code.playNewVideo(payload);
@@ -211,10 +215,9 @@ AppPage {
                     Code.changestatus(VideoListModel.Stopped);
                     videoThumbnailView.show(true);
                     if(fullScreen)
-                        exitFullscreen();
+                        Code.exitFullscreen();
                 }
                 onError: {
-                    console.log("Video Error: " + errorString);
                     Code.changestatus(VideoListModel.Stopped);
                     info.text = qsTr("Sorry we are unable to play this content.")
                     info.show()
@@ -225,7 +228,7 @@ AppPage {
                         if (!window.isActive && video.playing && !video.paused)
                         {
                             if (fullScreen)
-                                exitFullscreen();
+                                Code.exitFullscreen();
                             Code.pause();
                         }
                     }
@@ -261,13 +264,15 @@ AppPage {
             id: videoToolbar
             anchors.bottom: parent.bottom
             width: parent.width
+            opacity: 0
+            height: 0
             showprev: true
             showplay: true
             shownext: true
             showprogressbar: true
             showvolume: true
             showfavorite: true
-            isfavorite: currentVideoFavorite
+            isfavorite: videoThumbnailView.currentItem.mfavorite
             onPrevPressed: Code.playPrevVideo();
             onPlayPressed: Code.play();
             onPausePressed: Code.pause();
@@ -297,8 +302,7 @@ AppPage {
                 }
             }
             onFavoritePressed: {
-                currentVideoFavorite = isfavorite;
-                masterVideoModel.setFavorite(currentVideoID, currentVideoFavorite);
+                masterVideoModel.setFavorite(videoThumbnailView.currentItem.mitemid, isfavorite);
             }
             states: [
                 State {

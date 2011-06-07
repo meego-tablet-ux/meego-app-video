@@ -6,6 +6,54 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
+function forceState(data)
+{
+    var items = data.split(",");
+    var page = parseInt(items[0]);
+    var cmd = items[1];
+    var identifier = items[2];
+    var position = parseInt(items[3]);
+    var filter = parseInt(items[4]);
+
+    if((page != 0)&&(page != 1)&&(page != -1))
+        return;
+    if((cmd != "play")&&(cmd != "pause")&&(cmd != "stop")&&(cmd != ""))
+        return;
+    if((filter != VideoListModel.FilterAll)&&(filter != VideoListModel.FilterFavorite)&&
+       (filter != VideoListModel.FilterViewed)&&(filter != VideoListModel.FilterAdded)&&
+       (filter != VideoListModel.FilterUnwatched)&&(filter != -1))
+        return;
+
+    if(identifier != "")
+    {
+        targetState.set(page, cmd, "", position, filter);
+        masterVideoModel.requestItem(identifier);
+    } else {
+        targetState.set(page, cmd, identifier, position, filter);
+        window.setState();
+    }
+}
+
+function getID(identifier)
+{
+    var itemid = "";
+
+    if(masterVideoModel.isURN(identifier))
+        itemid = masterVideoModel.datafromURN(identifier, MediaItem.ID);
+    else
+        itemid = identifier;
+
+    return itemid;
+}
+
+function getData(identifier, role)
+{
+    if(masterVideoModel.isURN(identifier))
+        return masterVideoModel.datafromURN(identifier, role);
+    else
+        return masterVideoModel.datafromID(identifier, role);
+}
+
 function enterFullscreen()
 {
     showVideoToolbar = false;
@@ -27,7 +75,7 @@ function changestatus(videostate)
     if(videostate == VideoListModel.Playing)
     {
         // Play
-        editorModel.setPlayStatus(currentVideoID, VideoListModel.Playing);
+        editorModel.setPlayStatus(videoThumbnailView.currentItem.mitemid, VideoListModel.Playing);
         videoToolbar.ispause = true;
         window.inhibitScreenSaver = true;
         dbusControl.state = "playing";
@@ -35,7 +83,7 @@ function changestatus(videostate)
     else if(videostate == VideoListModel.Paused)
     {
         // Pause
-        editorModel.setPlayStatus(currentVideoID, VideoListModel.Paused);
+        editorModel.setPlayStatus(videoThumbnailView.currentItem.mitemid, VideoListModel.Paused);
         videoToolbar.ispause = false;
         window.inhibitScreenSaver = false;
         dbusControl.state = "paused";
@@ -43,7 +91,7 @@ function changestatus(videostate)
     else
     {
         // Stop
-        editorModel.setPlayStatus(currentVideoID, VideoListModel.Stopped);
+        editorModel.setPlayStatus(videoThumbnailView.currentItem.mitemid, VideoListModel.Stopped);
         videoToolbar.ispause = false;
         window.inhibitScreenSaver = false;
         dbusControl.state = "stopped";
@@ -56,7 +104,7 @@ function play()
     {
         resourceManager.userwantsplayback = true;
         changestatus(VideoListModel.Playing);
-        editorModel.setViewed(currentVideoID);
+        editorModel.setViewed(videoThumbnailView.currentItem.mitemid);
     }
 }
 
@@ -69,21 +117,31 @@ function pause()
 
 function stop()
 {
-    audio.stop();
+    video.stop();
     resourceManager.userwantsplayback = false;
     changestatus(VideoListModel.Stopped);
 }
 
+function startFromPosition(command)
+{
+    if((targetState.position >= 0)&&(targetState.position != video.position))
+        video.position = targetState.position;
+
+    if(command == "play")
+        play();
+    else if(command == "pause")
+        pause();
+    else if(command == "stop")
+        stop();
+}
+
 function playNewVideo(payload)
 {
-    currentVideoID = payload.mitemid;
-    currentVideoFavorite = payload.mfavorite;
-    videoSource = payload.muri;
-    labelVideoTitle = payload.mtitle;
+    videoToolbar.isfavorite = videoThumbnailView.currentItem.mfavorite;
     editorModel.setViewed(payload.mitemid);
 
     videoToolbar.ispause = true;
-    video.source = videoSource;
+    video.source = payload.muri;
     play();
     if(fullScreen)
         showVideoToolbar = false;
@@ -122,24 +180,4 @@ function formatMinutes(time)
 {
     var min = parseInt(time/60);
     return min
-}
-
-function openItemInDetailView(item)
-{
-    videoSource = item.muri;
-    videoFullscreen = false;
-    landingPage.addApplicationPage(detailViewContent);
-    labelVideoTitle = item.mtitle;
-    editorModel.setViewed(item.mitemid);
-}
-
-function openItemInDetailViewFullscreen(item)
-{
-    videoSource = item.muri;
-    videoFullscreen = true;
-    scene.fullscreen = true;
-    contentStrip.push(detailViewContent,videosSideContent);
-    contentStrip.activeContent.crumb.label = item.mtitle;
-    labelVideoTitle = item.mtitle;
-    editorModel.setViewed(item.mitemid);
 }

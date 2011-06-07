@@ -13,6 +13,7 @@ import QtMultimediaKit 1.1
 import MeeGo.App.Video.VideoPlugin 1.0
 import MeeGo.Sharing 0.1
 import MeeGo.Sharing.UI 0.1
+import "functions.js" as Code
 
 Window {
     id: window
@@ -24,14 +25,8 @@ Window {
     property string topicUnwatched: qsTr("Unwatched")
     property string topicFavorites: qsTr("Favorites")
 
-    property string labelVideoTitle: ""
     property string labelConfirmDelete: qsTr("Delete")
     property string labelCancel: qsTr("Cancel")
-    property string videoSearch: ""
-    property string videoSource: ""
-    property string favoriteColor: "#ff8888"
-    property string currentVideoID: ""
-    property bool currentVideoFavorite: false
     property string labelPlay: qsTr("Play")
     property string labelFavorite: qsTr("Favorite")
     property string labelUnFavorite: qsTr("Unfavorite")
@@ -39,19 +34,25 @@ Window {
     property string labelDelete: qsTr("Delete")
     property string labelMultiSelect:qsTr("Select multiple videos")
     property bool multiSelectMode: false
-
-    property int animationDuration: 500
-    property int videoIndex: 0
+    property variant targetState: StateData {}
 
     property int videoToolbarHeight: 55
     property int videoThumblistHeight: 75
-    property int videoListState: 0
-    property bool showVideoToolbar: false
-    property bool videoCropped: false
-    property bool playing: false
     property bool isLandscape: (window.inLandscape || window.inInvertedLandscape)
 
-    signal cmdReceived(string cmd, string cdata)
+    signal setState()
+    signal quietCmdReceived(string cmd)
+
+    property variant resourceManager: ResourceManager {
+        name: "player"
+        type: ResourceManager.VideoApp
+        onStartPlaying: {
+            window.quietCmdReceived("play");
+        }
+        onStopPlaying: {
+            window.quietCmdReceived("pause");
+        }
+    }
 
     Timer {
         id: startupTimer
@@ -79,7 +80,9 @@ Window {
             topicAll = qsTr("All (%1 videos)").arg(masterVideoModel.total);
         }
         onItemAvailable: {
-            window.cmdReceived("playVideo", identifier);
+            var itemid = Code.getID(identifier);
+            targetState.uri = masterVideoModel.datafromID(itemid, MediaItem.URI);
+            window.setState();
         }
     }
 
@@ -118,11 +121,19 @@ Window {
         target: mainWindow
         onCall: {
             if(parameters[0] == "playVideo")
+            {
+                targetState.set(1, "play", "", 0, VideoListModel.FilterAll);
                 masterVideoModel.requestItem(parameters[1]);
-            else if(parameters[0] == "play")
-                window.cmdReceived(parameters[0], "");
-            else if(parameters[0] == "pause")
-                window.cmdReceived(parameters[0], "");
+            }
+            else if(parameters[0] == "setState")
+            {
+                Code.forceState(parameters[1]);
+            }
+            else
+            {
+                targetState.set(1, parameters[0], "", -1, -1);
+                window.setState();
+            }
         }
     }
 
