@@ -224,6 +224,7 @@ AppPage {
                     currentState.position = video.position;
                 }
                 onSourceChanged: {
+                    currentState.urn = masterVideoModel.datafromURI(video.source, MediaItem.URN);
                     currentState.uri = video.source;
                 }
                 Connections {

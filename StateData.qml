@@ -10,11 +10,15 @@ import Qt 4.7
 
 Item {
     id: content
+    // control parameters
     property int page: -1
     property string uri: ""
     property int position: -1
     property string command: ""
     property int filter: -1
+
+    // status paramaters
+    property string urn: ""
 
     function clear()
     {
