@@ -10,7 +10,6 @@ import "functions.js" as Code
 AppPage {
     id: detailPage
     anchors.fill: parent
-    pageTitle: labelAppName
     property bool infocus: true
     property bool showVideoToolbar: false
     onActivated : {
@@ -224,6 +223,7 @@ AppPage {
                     currentState.position = video.position;
                 }
                 onSourceChanged: {
+                    detailPage.pageTitle = masterVideoModel.datafromURI(video.source, MediaItem.Title);
                     currentState.urn = masterVideoModel.datafromURI(video.source, MediaItem.URN);
                     currentState.uri = video.source;
                 }
