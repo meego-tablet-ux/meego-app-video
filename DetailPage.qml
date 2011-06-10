@@ -278,10 +278,16 @@ AppPage {
             showvolume: true
             showfavorite: true
             isfavorite: videoThumbnailView.currentItem.mfavorite
-            onPrevPressed: Code.playPrevVideo();
+            onPrevPressed: {
+                Code.playPrevVideo();
+                currentState.prevPressed();
+            }
             onPlayPressed: Code.play();
-            onPausePressed: Code.pause();
-            onNextPressed: Code.playNextVideo();
+            onPausePressed: {Code.pause();
+            onNextPressed: {
+                Code.playNextVideo();
+                currentState.nextPressed();
+            }
             Connections {
                 target: video
                 onPositionChanged: {

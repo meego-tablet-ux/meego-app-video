@@ -19,6 +19,8 @@ Item {
 
     // status paramaters
     property string urn: ""
+    signal prevPressed();
+    signal nextPressed();
 
     function clear()
     {
