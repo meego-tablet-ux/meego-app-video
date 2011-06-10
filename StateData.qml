@@ -21,6 +21,7 @@ Item {
     property string urn: ""
     signal prevPressed();
     signal nextPressed();
+    signal sliderMoved(int position);
 
     function clear()
     {

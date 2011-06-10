@@ -297,6 +297,7 @@ AppPage {
                 }
             }
             onSliderMoved: {
+                currentState.sliderMoved(video.duration * videoToolbar.sliderPosition);
                 if (video.seekable) {
                     progressBarConnection.target = null
                     video.position = video.duration * videoToolbar.sliderPosition;
