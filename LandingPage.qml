@@ -320,7 +320,7 @@ AppPage {
                 anchors.fill: parent
                 anchors.topMargin: 10
                 anchors.bottomMargin: 10
-                anchors.leftMargin: (parent.width - Math.floor(parent.width / 370)*370) / 2
+                anchors.leftMargin: 15
                 anchors.rightMargin: anchors.leftMargin
                 model: masterVideoModel
                 defaultThumbnail: "image://themedimage/images/media/video_thumb_med"
