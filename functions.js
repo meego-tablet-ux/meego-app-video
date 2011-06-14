@@ -181,3 +181,9 @@ function formatMinutes(time)
     var min = parseInt(time/60);
     return min
 }
+
+function videoCheck(cdata)
+{
+    // if the video ends in .desktop, it's not a video
+    return (cdata.indexOf(".desktop", cdata.length - 8) == -1);
+}

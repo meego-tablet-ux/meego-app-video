@@ -139,8 +139,11 @@ Window {
         onCall: {
             if(parameters[0] == "playVideo")
             {
-                targetState.set(1, "play", "", 0, VideoListModel.FilterAll);
-                masterVideoModel.requestItem(parameters[1]);
+                if(Code.videoCheck(parameters[1]))
+                {
+                    targetState.set(1, "play", "", 0, VideoListModel.FilterAll);
+                    masterVideoModel.requestItem(parameters[1]);
+                }
             }
             else if(parameters[0] == "setState")
             {
