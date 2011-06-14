@@ -283,7 +283,7 @@ AppPage {
                 currentState.prevPressed();
             }
             onPlayPressed: Code.play();
-            onPausePressed: {Code.pause();
+            onPausePressed: Code.pause();
             onNextPressed: {
                 Code.playNextVideo();
                 currentState.nextPressed();
