@@ -63,6 +63,7 @@ AppPage {
                 horizontalAlignment: Text.AlignHCenter
             }
             Text {
+                //: Confirmation message for deleting videos. "This" and "it" refer to the currently playing video which is onscreen.
                 text: qsTr("If you delete this, it will be removed from your device")
                 anchors.top:titleText.bottom
                 width:  parent.width
@@ -216,6 +217,7 @@ AppPage {
                 }
                 onError: {
                     Code.changestatus(VideoListModel.Stopped);
+                    //: This is the error text for a video that failed to play
                     info.text = qsTr("Sorry we are unable to play this content.")
                     info.show()
                 }

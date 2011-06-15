@@ -55,6 +55,7 @@ AppPage {
                 horizontalAlignment: Text.AlignHCenter
             }
             Text {
+                //: Confirmation message for deleting videos. "This" and "it" refer to list items, which represent videos on-screen.
                 text: qsTr("If you delete this, it will be removed from your device")
                 anchors.top:titleText.bottom
                 width:  parent.width
@@ -67,6 +68,7 @@ AppPage {
     ModalDialog {
         id: deleteMultipleItemsDialog
         property int deletecount: 0
+        //: text asking the user if the videos(s) is to deleted, warning them that it's permanent
         title: (deletecount < 2)?qsTr("Permanently delete this video?"):qsTr("Permanently delete these %1 videos?").arg(deletecount)
         acceptButtonText: labelConfirmDelete
         cancelButtonText:labelCancel
@@ -80,6 +82,7 @@ AppPage {
             anchors.fill: parent
             clip: true
             Text {
+                //: Confirmation message for deleting videos. "These" and "they" refer to list items, which represent videos on-screen.
                 text: qsTr("If you delete these, they will be removed from your device")
                 anchors.verticalCenter:parent.verticalCenter
                 width:  parent.width

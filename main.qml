@@ -28,7 +28,9 @@ Window {
     property string labelConfirmDelete: qsTr("Delete")
     property string labelCancel: qsTr("Cancel")
     property string labelPlay: qsTr("Play")
+    //: This is a verb. Marks the operation whereby items are added to the favorites list
     property string labelFavorite: qsTr("Favorite", "Verb")
+    //: This is a verb. Marks the operation whereby items are removed from the favorites list
     property string labelUnFavorite: qsTr("Unfavorite")
     property string labelcShare: qsTr("Share")
     property string labelDelete: qsTr("Delete")
