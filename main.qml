@@ -28,7 +28,7 @@ Window {
     property string labelConfirmDelete: qsTr("Delete")
     property string labelCancel: qsTr("Cancel")
     property string labelPlay: qsTr("Play")
-    property string labelFavorite: qsTr("Favorite")
+    property string labelFavorite: qsTr("Favorite", "Verb")
     property string labelUnFavorite: qsTr("Unfavorite")
     property string labelcShare: qsTr("Share")
     property string labelDelete: qsTr("Delete")
@@ -86,7 +86,7 @@ Window {
             currentState.filter = masterVideoModel.filter;
         }
         onTotalChanged: {
-            topicAll = qsTr("All (%1 videos)").arg(masterVideoModel.total);
+            topicAll = qsTr("All (%n video(s))", "", masterVideoModel.total);
         }
         onItemAvailable: {
             var itemid = Code.getID(identifier);
