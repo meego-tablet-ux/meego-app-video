@@ -97,6 +97,7 @@ AppPage {
             masterVideoModel.search = videoSearch;
             if(masterVideoModel.filter != VideoListModel.FilterSearch)
                 masterVideoModel.filter = VideoListModel.FilterSearch
+            window.actionMenuSelectedIndex = 0
             videoListState = (videoListState + 1)%2;
         }
     }
@@ -174,16 +175,20 @@ AppPage {
         onTotalChanged: {
             topicAll = qsTr("All (%1 videos)").arg(masterVideoModel.total);
             window.actionMenuModel = [topicAll, topicAdded, topicViewed, topicUnwatched, topicFavorites];
+            window.actionMenuSelectedIndex = 0
         }
     }
     actionMenuModel: [topicAll, topicAdded, topicViewed, topicUnwatched, topicFavorites]
     actionMenuPayload: ["all", "added", "viewed", "unwatched", "favorites"]
+    actionMenuHighlightSelection: true
+    actionMenuSelectedIndex: 0
     onActionMenuTriggered: {
         selectView(selectedItem);
     }
 
     function selectView(selectedItem) {
         if (selectedItem == "all") {
+            actionMenuSelectedIndex = 1
             landingView.opacity = 0;
             if(masterVideoModel.filter != VideoListModel.FilterAll)
             {
@@ -191,6 +196,7 @@ AppPage {
                 masterVideoModel.sort = VideoListModel.SortByTitle;
             }
         }else if(selectedItem == "added") {
+            actionMenuSelectedIndex = 2
             landingView.opacity = 0;
             if(masterVideoModel.filter != VideoListModel.FilterAdded)
             {
@@ -198,6 +204,7 @@ AppPage {
                 masterVideoModel.sort = VideoListModel.SortByAddedTime;
             }
         }else if(selectedItem == "viewed") {
+            actionMenuSelectedIndex = 2
             landingView.opacity = 0;
             if(masterVideoModel.filter != VideoListModel.FilterViewed)
             {
@@ -205,6 +212,7 @@ AppPage {
                 masterVideoModel.sort = VideoListModel.SortByAccessTime;
             }
         }else if(selectedItem == "unwatched") {
+            actionMenuSelectedIndex = 3
             landingView.opacity = 0;
             if(masterVideoModel.filter != VideoListModel.FilterUnwatched)
             {
@@ -212,6 +220,7 @@ AppPage {
                 masterVideoModel.sort = VideoListModel.SortByTitle;
             }
         }else if(selectedItem == "favorites") {
+            actionMenuSelectedIndex = 4
             landingView.opacity = 0;
             if(masterVideoModel.filter != VideoListModel.FilterFavorite)
             {
@@ -219,6 +228,7 @@ AppPage {
                 masterVideoModel.sort = VideoListModel.SortByTitle;
             }
         }else if(selectedItem == "search") {
+            actionMenuSelectedIndex = 1
             landingView.opacity = 0;
             masterVideoModel.search = videoSearch;
             if(masterVideoModel.filter != VideoListModel.FilterSearch)
@@ -315,7 +325,6 @@ AppPage {
                 type: videotype // video app = 0
                 selectionMode: multiSelectMode
                 visible: !noContentScreen.visible && !noVideoScreen.visible
-                showHeader: true
                 clip:true
                 anchors.fill: parent
                 anchors.topMargin: 10
