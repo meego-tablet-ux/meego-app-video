@@ -143,7 +143,7 @@ AppPage {
         property alias videoThumbList: videoThumbnailView
 
         Component.onCompleted: {
-            window.disableToolBarSearch = true;
+            detailPage.disableSearch = true;
             detailPage.lockOrientationIn = "landscape";
             detailPage.playvideo(true);
         }

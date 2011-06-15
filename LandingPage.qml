@@ -19,7 +19,7 @@ AppPage {
     onActivated : {
         infocus = true;
         currentState.page = 0;
-        window.disableToolBarSearch = false;
+        landingPage.disableSearch = false;
         fullScreen = false;
         window.lockOrientationIn = "noLock";
     }
@@ -169,6 +169,7 @@ AppPage {
                     shareObj.clearItems();
                     shareObj.addItem(payload.muri) // URI
                     shareObj.showContextTypes(contextMenu.mouseX, contextMenu.mouseY)
+                    contextMenu.hide();
                 }
             }
         }
