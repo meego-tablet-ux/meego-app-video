@@ -69,7 +69,7 @@ AppPage {
         id: deleteMultipleItemsDialog
         property int deletecount: 0
         //: text asking the user if the videos(s) is to deleted, warning them that it's permanent
-        title: (deletecount < 2)?qsTr("Permanently delete this video?"):qsTr("Permanently delete these %1 videos?").arg(deletecount)
+        title: qsTr("Permanently delete these %n video(s)?", "", deletecount)
         acceptButtonText: labelConfirmDelete
         cancelButtonText:labelCancel
         onAccepted: {
@@ -176,7 +176,7 @@ AppPage {
     Connections {
         target: masterVideoModel
         onTotalChanged: {
-            topicAll = qsTr("All (%1 videos)").arg(masterVideoModel.total);
+            topicAll = qsTr("All (%n video(s))", "", masterVideoModel.total);
             window.actionMenuModel = [topicAll, topicAdded, topicViewed, topicUnwatched, topicFavorites];
             window.actionMenuSelectedIndex = 0
         }
