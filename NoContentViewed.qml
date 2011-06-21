@@ -19,8 +19,10 @@ NoContent {
         id: help
         helpHeading1: qsTr("What are recently viewed videos?")
         helpText1: qsTr("Here you'll find the videos you watched last time you used your tablet.")
+        helpImage1: "image://themedimage/widgets/apps/media/blankscreen-video_view"
         helpHeading2: qsTr("How do I get videos?")
         helpText2: qsTr("You can download or copy videos onto your tablet. You can record videos with it too.")
+        helpImage2: "image://themedimage/widgets/apps/media/blankscreen-video_record"
         helpButton2Text: qsTr("Record a video")
         onHelpButton2Clicked: {
             appsModel.launch( "/usr/bin/meego-qml-launcher --opengl --app meego-app-camera --fullscreen")

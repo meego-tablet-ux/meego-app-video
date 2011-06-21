@@ -24,8 +24,10 @@ NoContent {
         id: help
         helpHeading1: qsTr("What are recently added videos?")
         helpText1: qsTr("Here you'll find the last videos you loaded onto your tablet.")
+        helpImage1: "image://themedimage/widgets/apps/media/blankscreen-video_view"
         helpHeading2: qsTr("How do I add videos?")
         helpText2: qsTr("You can download or copy videos onto your tablet. You can record videos with it too.")
+        helpImage2: "image://themedimage/widgets/apps/media/blankscreen-video_record"
     }
     Component.onCompleted: {
         if (settings.get("AddedOpenedBefore")) {

@@ -19,10 +19,13 @@ NoContent {
         id: help
         helpHeading1: qsTr("What are favourites?")
         helpText1: qsTr("The place to keep the videos you like most.")
+        helpImage1: "image://themedimage/widgets/apps/media/blankscreen-video_view"
         helpHeading2: qsTr("How do I create favourites?")
         helpText2: qsTr("To add videos to your favourites, tap and hold a video you love. Then select 'Favourite'.")
+        helpImage2: "image://themedimage/widgets/apps/media/blankscreen-video_menu"
         helpHeading3: qsTr("How do I get videos?")
         helpText3: qsTr("You can download or copy videos onto your tablet. You can record videos with it too.")
+        helpImage3: "image://themedimage/widgets/apps/media/blankscreen-video_record"
     }
     Component.onCompleted: {
         if (settings.get("FavoriteOpenedBefore")) {
