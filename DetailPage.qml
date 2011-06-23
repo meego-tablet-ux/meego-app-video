@@ -151,6 +151,7 @@ AppPage {
         Component.onDestruction: {
             detailPage.lockOrientationIn = "noLock";
             editorModel.setPlayStatus(videoThumbnailView.currentItem.mitemid, VideoListModel.Stopped);
+            window.inhibitScreenSaver = false;
         }
 
         MediaPreviewStrip {
