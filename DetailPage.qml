@@ -1,5 +1,5 @@
 import Qt 4.7
-import MeeGo.Components 0.1
+import MeeGo.Ux.Components.Common 0.1
 import MeeGo.Media 0.1
 import QtMultimediaKit 1.1
 import MeeGo.App.Video.VideoPlugin 1.0
