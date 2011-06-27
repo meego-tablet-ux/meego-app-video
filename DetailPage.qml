@@ -217,10 +217,11 @@ AppPage {
                         Code.exitFullscreen();
                 }
                 onError: {
+                    Code.stop();
                     Code.changestatus(VideoListModel.Stopped);
                     //: This is the error text for a video that failed to play
-                    info.text = qsTr("Sorry we are unable to play this content.")
-                    info.show()
+                    errorInfo.text = qsTr("Sorry we are unable to play this content.")
+                    errorInfo.show()
                 }
                 onPositionChanged: {
                     currentState.position = video.position;
@@ -243,7 +244,7 @@ AppPage {
                 }
             }
             InfoBar {
-                id: info
+                id: errorInfo
                 // TODO check visuals
                 width: parent.width - 2*20
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -282,12 +283,14 @@ AppPage {
             showfavorite: true
             isfavorite: videoThumbnailView.currentItem.mfavorite
             onPrevPressed: {
+                errorInfo.hide();
                 Code.playPrevVideo();
                 currentState.prevPressed();
             }
             onPlayPressed: Code.play();
             onPausePressed: Code.pause();
             onNextPressed: {
+                errorInfo.hide();
                 Code.playNextVideo();
                 currentState.nextPressed();
             }
