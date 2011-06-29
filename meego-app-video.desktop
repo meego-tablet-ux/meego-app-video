@@ -25,7 +25,7 @@ Name[de]=Videos
 Name[da]=Videoer
 Name[cs]=Videa
 Icon=meego-app-video
-Exec=meego-qml-launcher --opengl --cmd playVideo --cdata %f --fullscreen --app meego-app-video
+Exec=invoker --type=l meego-qml-launcher --opengl --cmd playVideo --cdata %f --fullscreen --app meego-app-video
 X-MEEGO-CORE-UX=true
 X-MEEGO-CGROUP-PATH=managed
 X-MEEGO-CGROUP-CONTROLLERS=freezer
