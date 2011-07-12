@@ -150,7 +150,7 @@ function playNewVideo(payload)
 }
 
 function playNextVideo() {
-    videoThumbnailView.show(true);
+    videoThumbnailView.show(false);
     if (videoThumbnailView.currentIndex < (videoThumbnailView.count -1))
         videoThumbnailView.currentIndex++;
     else

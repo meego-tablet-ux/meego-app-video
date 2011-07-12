@@ -234,11 +234,13 @@ AppPage {
                 Connections {
                     target: window
                     onIsActiveWindowChanged: {
-                        if (!window.isActiveWindow && video.playing && !video.paused)
+                        if (!window.isActiveWindow)
                         {
                             if (fullScreen)
                                 Code.exitFullscreen();
-                            Code.pause();
+                            videoThumbnailView.hide();
+                            if(video.playing && !video.paused)
+                                Code.pause();
                         }
                     }
                 }
