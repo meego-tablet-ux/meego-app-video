@@ -12,7 +12,7 @@ desktop.path += $$INSTALL_ROOT/usr/share/applications
 
 INSTALLS += qmlfiles desktop
 
-TRANSLATIONS += main.qml
+TRANSLATIONS += main.qml DetailPage.qml LandingPage.qml NoContentAdded.qml NoContentFavorite.qml NoContentUnwatched.qml NoContentViewed.qml NoVideosNotification.qml
 PROJECT_NAME = meego-app-video
 
 dist.commands += rm -fR $${PROJECT_NAME}-$${VERSION} &&
