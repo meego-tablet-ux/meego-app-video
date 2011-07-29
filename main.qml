@@ -72,6 +72,10 @@ Window {
     Component.onCompleted: {
         switchBook( landingScreenContent )
         startupTimer.start();
+        if(mainWindow.call)
+        {
+            processCommand(mainWindow.call);
+        }
     }
 
     // an editor model, used to do things like tag arbitrary items as favorite/viewed
@@ -137,26 +141,31 @@ Window {
         application:"meego-app-video"
     }
 
+    function processCommand (parameters)
+    {
+        if(parameters[0] == "playVideo")
+        {
+            if(Code.videoCheck(parameters[1]))
+            {
+                targetState.set(1, "play", "", 0, VideoListModel.FilterAll);
+                masterVideoModel.requestItem(parameters[1]);
+            }
+        }
+        else if(parameters[0] == "setState")
+        {
+            Code.forceState(parameters[1]);
+        }
+        else
+        {
+            targetState.set(1, parameters[0], "", -1, -1);
+            window.setState();
+        }
+    }
+
     Connections {
         target: mainWindow
         onCall: {
-            if(parameters[0] == "playVideo")
-            {
-                if(Code.videoCheck(parameters[1]))
-                {
-                    targetState.set(1, "play", "", 0, VideoListModel.FilterAll);
-                    masterVideoModel.requestItem(parameters[1]);
-                }
-            }
-            else if(parameters[0] == "setState")
-            {
-                Code.forceState(parameters[1]);
-            }
-            else
-            {
-                targetState.set(1, parameters[0], "", -1, -1);
-                window.setState();
-            }
+            processCommand(parameters);
         }
     }
 
